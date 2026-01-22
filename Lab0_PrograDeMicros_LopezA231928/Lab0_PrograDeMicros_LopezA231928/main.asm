@@ -1,9 +1,9 @@
 /*
 * NombreProgra.asm
 *
-* Creado: Marcos Rodrigo Lopez [231928]
-* Autor : Marcos Rodrigo Lopez [231928]
-* Descripción: Entrega de laboratorio 0, haciendo uso de un Arduino Nano con codigo en Assembler. La funcion del codigo es encender un LED de manera intermitente.
+* Creado: Rodrigo López [231928]
+* Autor : Marcos Rodrigo López Agustín [231928]
+* Descripción: Entrega de Laboratorio 0, con programación en Assembler en una Arduino Nano. El objetivo del laboratorio es hacer que un LED brille de manera intermitente.
 */
 /****************************************/
 // Encabezado (Definición de Registros, Variables y Constantes)
