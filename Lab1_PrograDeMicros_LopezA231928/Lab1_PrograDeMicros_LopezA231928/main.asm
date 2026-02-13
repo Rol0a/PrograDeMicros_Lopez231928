@@ -35,11 +35,11 @@ LDI     R16, 0x00
 STS     UCSR0B, R16
 
 //Configuración de CLK
-LDI		R16, 0b00000100		// lo mismo que decir (1<<CLKPS2) 
+LDI		R16, 0b00000100		// (1<<CLKPS2) 
 STS		CLKPR, R16			// set prescaler to 16F_cpu = 1MHz
 
 // Configura los pines para que sean OUTPUTS (salidas de los leds)
-LDI R16, 0x0F
+LDI R16, 0x1F
 OUT DDRB, R16
 
 LDI R16, 0xFF
