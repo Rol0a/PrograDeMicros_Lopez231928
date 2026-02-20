@@ -39,7 +39,7 @@ LDI		R16, 0b00000100		// lo mismo que decir (1<<CLKPS2)
 STS		CLKPR, R16			// set prescaler to 16F_cpu = 1MHz
 
 // Configura los pines para que sean OUTPUTS (salidas de los leds)
-LDI R16, 0x01F
+LDI R16, 0x1F
 OUT DDRB, R16
 
 LDI R16, 0xFF
@@ -63,10 +63,21 @@ LDI R16, (1 << CS01) | (1 << CS00)
 OUT TCCR0B, R16
 LDI R16, 100 
 OUT TCNT0, R16
+
+//Guardar Números en RAM para llamar después
+
+display_7seg: .DB 0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B, 0x77, 0x1F, 0x4E, 0x3D, 0x4F, 0x47
+LDI ZH, HIGH(display_7seg<<1)
+LDI ZL, LOW(display_7seg<<1)
+LPM R17, Z
+OUT PORTD, R17
+
+CLR R19
 /****************************************/
 // Loop Infinito
 
 MAIN_LOOP:
+// CONTADOR DE 4 BITS CON TIMER0
 	IN R16, TIFR0 // Carga el registro TIFR0 al Registro 16, El registro TIFR0 es una flag de overflow
 	SBRS R16, TOV0 // Skip if Bit in Register is Set
 	RJMP MAIN_LOOP
@@ -80,46 +91,93 @@ MAIN_LOOP:
 	BRNE MAIN_LOOP // Branck if Equal to
 
     INC R20 // Incremento en el contador
-	ANDI R20, 0x0F // Mask de los bits superiores
-    OUT PORTB, R20 // Sacar por el puerto se salida 
-	RJMP MAIN_LOOP
+	IN   R18, PORTB
+	ANDI R18, 0x10       ; keep only PB4 (alarm)
+	ANDI R20, 0x0F       ; keep only lower 4 bits
+	OR   R20, R18
+	OUT  PORTB, R20
 
-/****************************************/
-// NON-Interrupt subroutines
-/*Con anti rebote
+COMPVAL:
+	CP   R20, R21
+	BRNE ALARMA_OFF
+
+; iguales
+	SBI  PORTB, 4
+	RJMP LECTURA_BOT1
+
+ALARMA_OFF:
+	CBI  PORTB, 4
+	RJMP LECTURA_BOT1
+
+// LECTURA DE BOTONES
+LECTURA_BOT1:
     IN R16, PINC
     ANDI R16, 0b00000001     // PC0
     BREQ REBOTE_BOT1
     RJMP SIG_BOTON2
-
+	
 SIG_BOTON2:
     IN R16, PINC
     ANDI R16, 0b00000010     // PC1
     BREQ REBOTE_BOT2
     RJMP MAIN_LOOP
 
+
+/****************************************/
+
 REBOTE_BOT1:
     CALL DELAY
     IN R16, PINC
     ANDI R16, 0b00000001
     BRNE SIG_BOTON2
-    CALL CLOCK_COUNT
+    CALL DISPLAY_SUMA
     RJMP MAIN_LOOP
-
-CLOCK_COUNT:
-
 
 REBOTE_BOT2:
     CALL DELAY
     IN R16, PINC
-    ANDI R16, 0b00000001
-    BRNE SIG_BOTON3
-    CALL PORDEF_
+    ANDI R16, 0b00000010
+    BRNE MAIN_LOOP
+    CALL DISPLAY_RESTA
     RJMP MAIN_LOOP
 
-PORDEF_:
+// DISPLAYS DE LOS NÚMEROS
+DISPLAY_SUMA:
+    INC R21
+    ANDI R21, 0x0F        ; wrap 0–15
 
-*/ 
+    LDI ZH, HIGH(display_7seg<<1)
+    LDI ZL, LOW(display_7seg<<1)
+    ADD ZL, R21
+    ADC ZH, R1
+
+    LPM R17, Z
+
+    IN   R18, PORTD
+    ANDI R18, 0x80
+    ANDI R17, 0x7F
+    OR   R17, R18
+    OUT  PORTD, R17
+    RET
+
+DISPLAY_RESTA:
+	DEC R21
+    ANDI R21, 0x0F        ; wrap
+
+    LDI ZH, HIGH(display_7seg<<1)
+    LDI ZL, LOW(display_7seg<<1)
+    ADD ZL, R21
+    ADC ZH, R1
+
+    LPM R17, Z
+
+    IN   R18, PORTD
+    ANDI R18, 0x80
+    ANDI R17, 0x7F
+    OR   R17, R18
+    OUT  PORTD, R17
+    RET
+// COMPARACIÓN DE VALORES EN BANDERAS
 
 /****************************************/
 // Interrupt routines
@@ -128,7 +186,7 @@ PORDEF_:
 DELAY:
     LDI R17, 0xFF
 	LDI R18, 0xFF
-	LDI R19, 0x10
+	LDI R19, 0xF
 LOOP:
     DEC R17
     BRNE LOOP

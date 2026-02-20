@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.8  C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab2_PrograDeMicros_L�pezA231928\Lab2_PrograDeMicros_L�pezA231928\main.asm Fri Feb 13 12:40:46 2026
+AVRASM ver. 2.2.8  C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab2_PrograDeMicros_L�pezA231928\Lab2_PrograDeMicros_L�pezA231928\main.asm Thu Feb 19 20:15:28 2026
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc'
 C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab2_PrograDeMicros_L�pezA231928\Lab2_PrograDeMicros_L�pezA231928\main.asm(10): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc'
@@ -989,7 +989,7 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
                                  
                                  * Creado: Rodrigo López [231928] 
                                  * Autor : Marcos Rodrigo López Agustín [231928] 
-                                 * Descripción: Entrega de Laboratorio 1, con programación en Assembler en una Arduino Nano. El objetivo del laboratorio es hacer un sumador de 4 bits. 
+                                 * Descripción: Entrega de Laboratorio 2. El objetivo del laboratorio es ejecutar un Display de 7 segmentos y un contador binario que tenga un aumento cada 100ms/
                                  */ 
                                  
                                  /****************************************/
@@ -1070,7 +1070,7 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
 000009 9300 0061                 STS		CLKPR, R16			// set prescaler to 16F_cpu = 1MHz
                                  
                                  // Configura los pines para que sean OUTPUTS (salidas de los leds)
-00000b e10f                      LDI R16, 0x01F
+00000b e10f                      LDI R16, 0x1F
 00000c b904                      OUT DDRB, R16
                                  
 00000d ef0f                      LDI R16, 0xFF
@@ -1094,81 +1094,144 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
 000018 bd05                      OUT TCCR0B, R16
 000019 e604                      LDI R16, 100 
 00001a bd06                      OUT TCNT0, R16
+                                 
+                                 //Guardar Números en RAM para llamar después
+                                 
+00001b 307e
+00001c 796d
+00001d 5b33
+00001e 705f
+00001f 7b7f
+000020 1f77
+000021 3d4e
+000022 474f                      display_7seg: .DB 0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B, 0x77, 0x1F, 0x4E, 0x3D, 0x4F, 0x47
+000023 e0f0                      LDI ZH, HIGH(display_7seg<<1)
+000024 e3e6                      LDI ZL, LOW(display_7seg<<1)
+000025 9114                      LPM R17, Z
+000026 b91b                      OUT PORTD, R17
+                                 
+000027 2733                      CLR R19
                                  /****************************************/
                                  // Loop Infinito
-                                 /*Con anti rebote
-                                     IN R16, PINC
-                                     ANDI R16, 0b00000001     // PC0
-                                     BREQ REBOTE_BOT1
-                                     RJMP SIG_BOTON2
-                                 
-                                 SIG_BOTON2:
-                                     IN R16, PINC
-                                     ANDI R16, 0b00000010     // PC1
-                                     BREQ REBOTE_BOT2
-                                     RJMP MAIN_LOOP
-                                 
-                                 REBOTE_BOT1:
-                                     CALL DELAY
-                                     IN R16, PINC
-                                     ANDI R16, 0b00000001
-                                     BRNE SIG_BOTON2
-                                     CALL CLOCK_COUNT
-                                     RJMP MAIN_LOOP
-                                 
-                                 CLOCK_COUNT:
-                                 
-                                 
-                                 REBOTE_BOT2:
-                                     CALL DELAY
-                                     IN R16, PINC
-                                     ANDI R16, 0b00000001
-                                     BRNE SIG_BOTON3
-                                     CALL PORDEF_
-                                     RJMP MAIN_LOOP
-                                 
-                                 PORDEF_:
-                                 
-                                 */ 
                                  
                                  MAIN_LOOP:
-00001b b305                      	IN R16, TIFR0
-00001c ff00                      	SBRS R16, TOV0
-00001d cffd                      	RJMP MAIN_LOOP
+                                 // CONTADOR DE 4 BITS CON TIMER0
+000028 b305                      	IN R16, TIFR0 // Carga el registro TIFR0 al Registro 16, El registro TIFR0 es una flag de overflow
+000029 ff00                      	SBRS R16, TOV0 // Skip if Bit in Register is Set
+00002a cffd                      	RJMP MAIN_LOOP
                                  
-00001e 9aa8                      	SBI TIFR0, TOV0
-00001f e604                      	LDI R16, 100
-000020 bd06                      	OUT TCNT0, R16
-000021 9513                      	INC R17
-000022 301a                      	CPI R17, 10
-000023 f7b9                      	BRNE MAIN_LOOP
+00002b 9aa8                      	SBI TIFR0, TOV0 // Clear de la flag de Overflow del Timer0
+00002c e604                      	LDI R16, 100 // Recarga el Timer para que vuelva a tener el contador
+00002d bd06                      	OUT TCNT0, R16 // Saca el valor de R16 (recargo del timer) para que vuelva a iniciar a contar ahi
                                  
-000024 9543                          INC R20
-000025 704f                      	ANDI R20, 0x0F
-000026 b945                          OUT PORTB, R20
-000027 cff3                      	RJMP MAIN_LOOP
+00002e 9513                      	INC R17 // Va contando cuantas veces hace overflow
+00002f 301a                      	CPI R17, 10 // Compara que hayan 10 Overflows (100ms)
+000030 f7b9                      	BRNE MAIN_LOOP // Branck if Equal to
+                                 
+000031 9543                          INC R20 // Incremento en el contador
+000032 b125                      	IN   R18, PORTB
+000033 7120                      	ANDI R18, 0x10       ; keep only PB4 (alarm)
+000034 704f                      	ANDI R20, 0x0F       ; keep only lower 4 bits
+000035 2b42                      	OR   R20, R18
+000036 b945                      	OUT  PORTB, R20
+                                 
+                                 COMPVAL:
+000037 1745                      	CP   R20, R21
+000038 f411                      	BRNE ALARMA_OFF
+                                 
+                                 ; iguales
+000039 9a2c                      	SBI  PORTB, 4
+00003a c002                      	RJMP LECTURA_BOT1
+                                 
+                                 ALARMA_OFF:
+00003b 982c                      	CBI  PORTB, 4
+00003c c000                      	RJMP LECTURA_BOT1
+                                 
+                                 // LECTURA DE BOTONES
+                                 LECTURA_BOT1:
+00003d b106                          IN R16, PINC
+00003e 7001                          ANDI R16, 0b00000001     // PC0
+00003f f029                          BREQ REBOTE_BOT1
+000040 c000                          RJMP SIG_BOTON2
+                                 	
+                                 SIG_BOTON2:
+000041 b106                          IN R16, PINC
+000042 7002                          ANDI R16, 0b00000010     // PC1
+000043 f049                          BREQ REBOTE_BOT2
+000044 cfe3                          RJMP MAIN_LOOP
+                                 
                                  
                                  /****************************************/
-                                 // NON-Interrupt subroutines
                                  
+                                 REBOTE_BOT1:
+000045 940e 006f                     CALL DELAY
+000047 b106                          IN R16, PINC
+000048 7001                          ANDI R16, 0b00000001
+000049 f7b9                          BRNE SIG_BOTON2
+00004a 940e 0055                     CALL DISPLAY_SUMA
+00004c cfdb                          RJMP MAIN_LOOP
                                  
+                                 REBOTE_BOT2:
+00004d 940e 006f                     CALL DELAY
+00004f b106                          IN R16, PINC
+000050 7002                          ANDI R16, 0b00000010
+000051 f6b1                          BRNE MAIN_LOOP
+000052 940e 0062                     CALL DISPLAY_RESTA
+000054 cfd3                          RJMP MAIN_LOOP
                                  
+                                 // DISPLAYS DE LOS NÚMEROS
+                                 DISPLAY_SUMA:
+000055 9553                          INC R21
+000056 705f                          ANDI R21, 0x0F        ; wrap 0–15
+                                 
+000057 e0f0                          LDI ZH, HIGH(display_7seg<<1)
+000058 e3e6                          LDI ZL, LOW(display_7seg<<1)
+000059 0fe5                          ADD ZL, R21
+00005a 1df1                          ADC ZH, R1
+                                 
+00005b 9114                          LPM R17, Z
+                                 
+00005c b12b                          IN   R18, PORTD
+00005d 7820                          ANDI R18, 0x80
+00005e 771f                          ANDI R17, 0x7F
+00005f 2b12                          OR   R17, R18
+000060 b91b                          OUT  PORTD, R17
+000061 9508                          RET
+                                 
+                                 DISPLAY_RESTA:
+000062 955a                      	DEC R21
+000063 705f                          ANDI R21, 0x0F        ; wrap
+                                 
+000064 e0f0                          LDI ZH, HIGH(display_7seg<<1)
+000065 e3e6                          LDI ZL, LOW(display_7seg<<1)
+000066 0fe5                          ADD ZL, R21
+000067 1df1                          ADC ZH, R1
+                                 
+000068 9114                          LPM R17, Z
+                                 
+000069 b12b                          IN   R18, PORTD
+00006a 7820                          ANDI R18, 0x80
+00006b 771f                          ANDI R17, 0x7F
+00006c 2b12                          OR   R17, R18
+00006d b91b                          OUT  PORTD, R17
+00006e 9508                          RET
+                                 // COMPARACIÓN DE VALORES EN BANDERAS
                                  
                                  /****************************************/
                                  // Interrupt routines
                                  //Para evitar el rebote unicamente se añadió una rutina que evita que se pueda presionar el mismo botón varias veces.
                                  
                                  DELAY:
-000028 ef1f                          LDI R17, 0xFF
-000029 ef2f                      	LDI R18, 0xFF
-00002a e130                      	LDI R19, 0x10
+00006f ef1f                          LDI R17, 0xFF
+000070 ef2f                      	LDI R18, 0xFF
+000071 e03f                      	LDI R19, 0xF
                                  LOOP:
-00002b 951a                          DEC R17
-00002c f7f1                          BRNE LOOP
-00002d 952a                      	DEC R18
-00002e f7e1                          BRNE LOOP
-00002f 953a                      	DEC R19
-000030 f7d1                          BRNE LOOP
+000072 951a                          DEC R17
+000073 f7f1                          BRNE LOOP
+000074 952a                      	DEC R18
+000075 f7e1                          BRNE LOOP
+000076 953a                      	DEC R19
+000077 f7d1                          BRNE LOOP
 
 
 RESOURCE USE INFORMATION
@@ -1186,39 +1249,39 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 "ATmega328P" register use summary:
-x  :   0 y  :   0 z  :   0 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
+x  :   0 y  :   0 z  :   3 r0 :   0 r1 :   2 r2 :   0 r3 :   0 r4 :   0 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16:  20 r17:   4 r18:   2 r19:   2 r20:   5 
-r21:   2 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
-r29:   0 r30:   0 r31:   0 
-Registers used: 6 out of 35 (17.1%)
+r13:   0 r14:   0 r15:   0 r16:  28 r17:  14 r18:  11 r19:   3 r20:   7 
+r21:   9 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
+r29:   0 r30:   5 r31:   5 
+Registers used: 10 out of 35 (28.6%)
 
 "ATmega328P" instruction use summary:
-.lds  :   0 .sts  :   0 adc   :   0 add   :   0 adiw  :   0 and   :   0 
-andi  :   1 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
-brcc  :   0 brcs  :   0 break :   0 breq  :   0 brge  :   0 brhc  :   0 
+.lds  :   0 .sts  :   0 adc   :   2 add   :   2 adiw  :   0 and   :   0 
+andi  :  12 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
+brcc  :   0 brcs  :   0 break :   0 breq  :   2 brge  :   0 brhc  :   0 
 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 brlt  :   0 brmi  :   0 
-brne  :   4 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
-brvs  :   0 bset  :   0 bst   :   0 call  :   0 cbi   :   2 cbr   :   0 
-clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :   0 cls   :   0 
-clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 
-cpi   :   1 cpse  :   0 dec   :   3 eor   :   0 fmul  :   0 fmuls :   0 
-fmulsu:   0 icall :   0 ijmp  :   0 in    :   1 inc   :   2 jmp   :   0 
-ld    :   0 ldd   :   0 ldi   :  14 lds   :   0 lpm   :   0 lsl   :   0 
+brne  :   7 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
+brvs  :   0 bset  :   0 bst   :   0 call  :   4 cbi   :   3 cbr   :   0 
+clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :   1 cls   :   0 
+clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   1 cpc   :   0 
+cpi   :   1 cpse  :   0 dec   :   4 eor   :   0 fmul  :   0 fmuls :   0 
+fmulsu:   0 icall :   0 ijmp  :   0 in    :   8 inc   :   3 jmp   :   0 
+ld    :   0 ldd   :   0 ldi   :  20 lds   :   0 lpm   :   6 lsl   :   0 
 lsr   :   0 mov   :   0 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 
-neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :  10 pop   :   0 
-push  :   0 rcall :   0 ret   :   1 reti  :   0 rjmp  :   3 rol   :   0 
-ror   :   0 sbc   :   0 sbci  :   0 sbi   :   3 sbic  :   0 sbis  :   0 
+neg   :   0 nop   :   0 or    :   3 ori   :   0 out   :  13 pop   :   0 
+push  :   0 rcall :   0 ret   :   3 reti  :   0 rjmp  :   8 rol   :   0 
+ror   :   0 sbc   :   0 sbci  :   0 sbi   :   4 sbic  :   0 sbis  :   0 
 sbiw  :   0 sbr   :   0 sbrc  :   0 sbrs  :   1 sec   :   0 seh   :   0 
 sei   :   0 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 
 sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :   2 
 sub   :   0 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
-Instructions used: 14 out of 113 (12.4%)
+Instructions used: 22 out of 113 (19.5%)
 
 "ATmega328P" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000064    100      0    100   32768   0.3%
+[.cseg] 0x000000 0x0000f2    226     16    242   32768   0.7%
 [.dseg] 0x000100 0x000100      0      0      0    2048   0.0%
 [.eseg] 0x000000 0x000000      0      0      0    1024   0.0%
 
