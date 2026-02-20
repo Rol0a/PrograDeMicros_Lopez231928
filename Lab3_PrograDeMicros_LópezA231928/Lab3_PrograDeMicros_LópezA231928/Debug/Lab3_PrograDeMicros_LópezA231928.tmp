@@ -1,0 +1,39 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc</FILE>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\Debug\Lab3_PrograDeMicros_LópezA231928.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>Lab3_PrograDeMicros_LópezA231928.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>Lab3_PrograDeMicros_LópezA231928.map</FILE>
+  <FILE>Lab3_PrograDeMicros_LópezA231928.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <C_LED><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>15</LINE></C_LED>
+  <INCREASE_BOTON><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>16</LINE></INCREASE_BOTON>
+  <DECREASE_BOTON><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>17</LINE></DECREASE_BOTON>
+  <RESET><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>25</LINE></RESET>
+  <SETUP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>35</LINE></SETUP>
+  <display_7seg><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>85</LINE></display_7seg>
+  <MAIN_LOOP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>94</LINE></MAIN_LOOP>
+  <INC_READ><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>95</LINE></INC_READ>
+  <DEC_READ><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>110</LINE></DEC_READ>
+  <INTERRUPT_INC><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>130</LINE></INTERRUPT_INC>
+  <CHECK_DECREMENT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>149</LINE></CHECK_DECREMENT>
+  <ISR_END><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>160</LINE></ISR_END>
+ </LABELS>
+</ASSEMBLER_INFO>
