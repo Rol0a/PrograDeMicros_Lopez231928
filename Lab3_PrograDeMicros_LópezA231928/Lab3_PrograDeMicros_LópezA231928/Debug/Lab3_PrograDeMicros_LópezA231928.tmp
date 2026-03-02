@@ -23,17 +23,30 @@
   <FILE>Lab3_PrograDeMicros_LópezA231928.lss</FILE>
  </OUTPUT_FILES>
  <LABELS>
-  <C_LED><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>15</LINE></C_LED>
-  <INCREASE_BOTON><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>16</LINE></INCREASE_BOTON>
-  <DECREASE_BOTON><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>17</LINE></DECREASE_BOTON>
-  <RESET><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>25</LINE></RESET>
-  <SETUP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>35</LINE></SETUP>
-  <display_7seg><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>85</LINE></display_7seg>
-  <MAIN_LOOP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>94</LINE></MAIN_LOOP>
-  <INC_READ><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>95</LINE></INC_READ>
-  <DEC_READ><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>110</LINE></DEC_READ>
-  <INTERRUPT_INC><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>130</LINE></INTERRUPT_INC>
-  <CHECK_DECREMENT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>149</LINE></CHECK_DECREMENT>
-  <ISR_END><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>160</LINE></ISR_END>
+  <LED_BIN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>17</LINE></LED_BIN>
+  <DIG_UNI><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>18</LINE></DIG_UNI>
+  <DIG_DEC><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>19</LINE></DIG_DEC>
+  <MUX_SEL><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>20</LINE></MUX_SEL>
+  <TICKS_10MS><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>21</LINE></TICKS_10MS>
+  <FLAG_UP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>22</LINE></FLAG_UP>
+  <FLAG_DOWN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>23</LINE></FLAG_DOWN>
+  <INIT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>42</LINE></INIT>
+  <PCINT_ISR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>271</LINE></PCINT_ISR>
+  <TIMER0_ISR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>249</LINE></TIMER0_ISR>
+  <CONFIG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>52</LINE></CONFIG>
+  <TIMER0_SETUP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>196</LINE></TIMER0_SETUP>
+  <MAIN_LOOP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>113</LINE></MAIN_LOOP>
+  <SHOW_UNI><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>123</LINE></SHOW_UNI>
+  <DRAW><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>127</LINE></DRAW>
+  <UPDATE_DISPLAY><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>212</LINE></UPDATE_DISPLAY>
+  <CHECK_BUTTONS><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>161</LINE></CHECK_BUTTONS>
+  <STORE_TIME><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>154</LINE></STORE_TIME>
+  <CHECK_DOWN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>176</LINE></CHECK_DOWN>
+  <LOAD_UNI><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>226</LINE></LOAD_UNI>
+  <FETCH_SEG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>229</LINE></FETCH_SEG>
+  <SEG_TAB><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>302</LINE></SEG_TAB>
+  <SET_UP_FLAG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>284</LINE></SET_UP_FLAG>
+  <SET_DOWN_FLAG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>289</LINE></SET_DOWN_FLAG>
+  <EXIT_PCINT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_LópezA231928\Lab3_PrograDeMicros_LópezA231928\main.asm</FILE><LINE>293</LINE></EXIT_PCINT>
  </LABELS>
 </ASSEMBLER_INFO>

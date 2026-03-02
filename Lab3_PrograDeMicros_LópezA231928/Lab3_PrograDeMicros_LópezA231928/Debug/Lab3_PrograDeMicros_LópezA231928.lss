@@ -1,10 +1,10 @@
 
-AVRASM ver. 2.2.8  C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_L�pezA231928\Lab3_PrograDeMicros_L�pezA231928\main.asm Fri Feb 20 14:17:18 2026
+AVRASM ver. 2.2.8  C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_L�pezA231928\Lab3_PrograDeMicros_L�pezA231928\main.asm Mon Mar 02 02:11:06 2026
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc'
-C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_L�pezA231928\Lab3_PrograDeMicros_L�pezA231928\main.asm(10): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc'
+C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_L�pezA231928\Lab3_PrograDeMicros_L�pezA231928\main.asm(12): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc'
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc'
-C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_L�pezA231928\Lab3_PrograDeMicros_L�pezA231928\main.asm(10): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc'
+C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\Lab3_PrograDeMicros_L�pezA231928\Lab3_PrograDeMicros_L�pezA231928\main.asm(12): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc'
                                  
                                  /* * Laboratorio 3 *
                                  
@@ -989,13 +989,15 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
                                  
                                  * Creado: Rodrigo López [231928] 
                                  * Autor : Marcos Rodrigo López Agustín [231928] 
-                                 * Descripción: Entrega de PreLab3
-                                 */ 
+                                 * Descripción: Generación de contador de minutos (00–59) mediante
+                                 * multiplexado en dos displays de 7 segmentos y contador binario
+                                 * de 4 bits controlado por interrupciones por cambio de estado.
+                                 */
                                  
                                  /****************************************/
-                                 // Encabezado (Definición de Registros, Variables y Constantes)
+                                 // Definición de Registros y Variables
                                  
-                                 .include "M328PDEF.inc" // Include definitions specific to ATMega328P
+                                 .include "M328PDEF.inc"
                                  
                                  ;***** Created: 2011-02-09 12:03 ******* Source: ATmega328P.xml **********
                                  ;*************************************************************************
@@ -1042,164 +1044,297 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
                                  
                                  .dseg
                                  .org SRAM_START
-                                 // Declaración de variables para el contador y flags para los botones
-000100                           C_LED: .byte 1
-000101                           INCREASE_BOTON: .byte 1
-000102                           DECREASE_BOTON: .byte 1
+                                 
+000100                           LED_BIN:        .BYTE 1      // Contador binario 4 bits
+000101                           DIG_UNI:        .BYTE 1      // Dígito unidades
+000102                           DIG_DEC:        .BYTE 1      // Dígito decenas
+000103                           MUX_SEL:        .BYTE 1      // Selector de display
+000104                           TICKS_10MS:     .BYTE 1      // Acumulador de 10ms
+000105                           FLAG_UP:        .BYTE 1      // Bandera incremento
+000106                           FLAG_DOWN:      .BYTE 1      // Bandera decremento
+                                 
+                                 /****************************************/
                                  
                                  .cseg
                                  .org 0x0000
                                  
                                  /****************************************/
-                                 // Configuración de la pila
+                                 // Vectores de Interrupción
                                  
-                                 RESET:
-000000 ef0f                          LDI R16, LOW(RAMEND)
-000001 bf0d                          OUT SPL, R16
-000002 e008                          LDI R16, HIGH(RAMEND)
-000003 bf0e                          OUT SPH, R16
-000004 c000                          RJMP SETUP
-                                 
-                                 /****************************************/
-                                 // Configuracion MCU
-                                 
-                                 SETUP:
-                                 // Deshabilitar USART
-000005 e000                      LDI     R16, 0x00
-000006 9300 00c1                 STS     UCSR0B, R16
-                                 
-                                 //Configuración de CLK (Prescaler)
-000008 e004                      LDI		R16, 0b00000100		// lo mismo que decir (1<<CLKPS2) 
-000009 9300 0061                 STS		CLKPR, R16			// set prescaler to 16F_cpu = 1MHz
-                                 
-                                 // Configura los pines para que sean OUTPUTS (salidas de los leds)
-00000b e00f                      LDI R16, 0x0F
-00000c b904                      OUT DDRB, R16
-                                 
-00000d ef0f                      LDI R16, 0xFF
-00000e b90a                      OUT DDRD, R16
-                                 
-                                 //Configuración de las entradas para los botones
-00000f 9838                      CBI DDRC, 0
-000010 9a40                      SBI PORTC, 0
-000011 9839                      CBI DDRC, 1
-000012 9a41                      SBI PORTC, 1
-                                 
-                                 //Configura la salidas de cada LED
-000013 e040                      LDI R20, 0x00
-000014 e050                      LDI R21, 0x00
-000015 b945                      OUT PORTB, R20
-000016 b95b                      OUT PORTD, R21
-                                 
-                                 // Inicializacion del Timer0
-000017 e003                      LDI R16, (1 << CS01) | (1 << CS00)
-000018 bd05                      OUT TCCR0B, R16
-000019 e604                      LDI R16, 100 
-00001a bd06                      OUT TCNT0, R16
-                                 
-                                 // Habilitar Interrupciones 
-00001b e002                      LDI R16, (1 << PCIE1) 
-00001c 9300 0068                 STS PCICR, R16
-                                 
-00001e e003                      LDI R16, (1 << PCINT8) | (1 << PCINT9) //Se habilita para mis pines de entrada
-00001f 9300 006c                 STS PCMSK1, R16
-                                 
-                                 // Se inicializan las variables que existen
-000021 e000                      LDI R16, 0x00
-000022 9300 0100                 STS C_LED, R16
-000024 9300 0101                 STS INCREASE_BOTON, R16
-000026 9300 0102                 STS DECREASE_BOTON, R16
-                                 
-000028 9478                      SEI	
-                                 
-                                 //Guardar Números en RAM para llamar después
-000029 307e
-00002a 796d
-00002b 5b33
-00002c 705f
-00002d 7b7f
-00002e 1f77
-00002f 3d4e
-000030 474f                      display_7seg: .DB 0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B, 0x77, 0x1F, 0x4E, 0x3D, 0x4F, 0x47
-000031 e0f0                      LDI ZH, HIGH(display_7seg<<1)
-000032 e5e2                      LDI ZL, LOW(display_7seg<<1)
-000033 9114                      LPM R17, Z
-000034 b91b                      OUT PORTD, R17
+000000 c01c                      RJMP INIT
+                                 .org 0x0008
+000008 c0bb                      RJMP PCINT_ISR
+                                 .org 0x001C
+00001c c095                      RJMP TIMER0_ISR
                                  
                                  /****************************************/
-                                 // Loop Infinito
+                                 // Inicialización de Pila
+                                 
+                                 INIT:
+00001d ef0f                          LDI R16, LOW(RAMEND)
+00001e bf0d                          OUT SPL, R16
+00001f e008                          LDI R16, HIGH(RAMEND)
+000020 bf0e                          OUT SPH, R16
+000021 c000                          RJMP CONFIG
+                                 
+                                 /****************************************/
+                                 // Configuración General
+                                 
+                                 CONFIG:
+                                     // Prescaler principal → 1 MHz
+000022 e800                          LDI R16, (1 << CLKPCE)
+000023 9300 0061                     STS CLKPR, R16
+000025 e004                          LDI R16, 0b00000100
+000026 9300 0061                     STS CLKPR, R16
+                                 
+                                     // Deshabilitar USART
+000028 e000                          LDI R16, 0x00
+000029 9300 00c1                     STS UCSR0B, R16
+                                 
+                                 /****************************************/
+                                 // Configuración de Puertos
+                                 
+                                     ; LEDs binarios
+00002b e00f                          LDI R16, 0x0F
+00002c b904                          OUT DDRB, R16
+00002d 2700                          CLR R16
+00002e b905                          OUT PORTB, R16
+                                 
+                                     ; Display segmentos
+00002f ef0f                          LDI R16, 0xFF
+000030 b90a                          OUT DDRD, R16
+000031 b90b                          OUT PORTD, R16
+                                 
+                                     ; PC0-PC1 botones / PC2-PC3 multiplex
+000032 e00c                          LDI R16, 0b00001100
+000033 b907                          OUT DDRC, R16
+000034 e00b                          LDI R16, 0b00001011
+000035 b908                          OUT PORTC, R16
+                                 
+                                 /****************************************/
+                                 // Pin Change Interrupt
+                                 
+000036 e002                          LDI R16, (1 << PCIE1)
+000037 9300 0068                     STS PCICR, R16
+000039 e003                          LDI R16, (1 << PCINT8) | (1 << PCINT9)
+00003a 9300 006c                     STS PCMSK1, R16
+                                 
+                                 /****************************************/
+                                 // Timer0 Configuración
+                                 
+00003c 940e 008d                     CALL TIMER0_SETUP
+                                 
+                                 /****************************************/
+                                 // Inicializar Variables
+                                 
+00003e 2700                          CLR R16
+00003f 9300 0100                     STS LED_BIN, R16
+000041 9300 0101                     STS DIG_UNI, R16
+000043 9300 0102                     STS DIG_DEC, R16
+000045 9300 0103                     STS MUX_SEL, R16
+000047 9300 0104                     STS TICKS_10MS, R16
+000049 9300 0105                     STS FLAG_UP, R16
+00004b 9300 0106                     STS FLAG_DOWN, R16
+                                 
+00004d 9478                          SEI
+                                 
+                                 /****************************************/
+                                 // Loop Principal
                                  
                                  MAIN_LOOP:
-                                 INC_READ:
-                                 	//Lectura inicial del primer botón
-000035 9100 0101                 	LDS R16, INCREASE_BOTON
-000037 3001                      	CPI R16, 1
-000038 f451                      	BRNE DEC_READ
-                                 	//Cargar valor de Incremento al Contador
-000039 9100 0100                 	LDS R16, C_LED
-00003b 9503                      	INC R16
-00003c 700f                      	ANDI R16, 0x0F
-00003d 9300 0100                 	STS C_LED, R16
-00003f b905                      	OUT PORTB, R16
+                                     ; Multiplex selector
+00004e 9100 0103                     LDS R16, MUX_SEL
+000050 3001                          CPI R16, 1
+000051 f019                          BREQ SHOW_UNI
                                  
-                                 	// LIMPIAR BANDERAS DE DECREMENTO
-000040 e000                      	LDI R16, 0x00
-000041 9300 0101                 	STS INCREASE_BOTON, R16
-                                 DEC_READ:
-000043 9100 0102                 	LDS R16, DECREASE_BOTON
-000045 3001                      	CPI R16, 1
-000046 f771                      	BRNE MAIN_LOOP
-                                 	//Cargar valores de decremento al contador
-000047 9100 0100                 	LDS R16, C_LED
-000049 950a                      	DEC R16
-00004a 700f                      	ANDI R16, 0x0F
-00004b 9300 0100                 	STS C_LED, R16
-00004d b905                      	OUT PORTB, R16
+000052 9a42                          SBI PORTC, PC2
+000053 9843                          CBI PORTC, PC3
+000054 c002                          RJMP DRAW
                                  
-                                 	// LIMPIAR BANDERAS DE DECREMENTO
-00004e e000                      	LDI R16, 0x00
-00004f 9300 0102                 	STS DECREASE_BOTON, R16
+                                 SHOW_UNI:
+000055 9a43                          SBI PORTC, PC3
+000056 9842                          CBI PORTC, PC2
+                                 
+                                 DRAW:
+000057 940e 0099                     CALL UPDATE_DISPLAY
                                  
                                  /****************************************/
-                                 // NON-INTERRUPT ROUTINES
+                                 // Lógica de conteo 1 segundo
+                                 
+000059 9100 0104                     LDS R16, TICKS_10MS
+00005b 3604                          CPI R16, 100
+00005c f499                          BRNE CHECK_BUTTONS
+                                 
+00005d 2700                          CLR R16
+00005e 9300 0104                     STS TICKS_10MS, R16
+                                 
+000060 9100 0101                     LDS R16, DIG_UNI
+000062 9110 0102                     LDS R17, DIG_DEC
+                                 
+000064 9503                          INC R16
+000065 300a                          CPI R16, 10
+000066 f429                          BRNE STORE_TIME
+                                 
+000067 2700                          CLR R16
+000068 9513                          INC R17
+000069 3016                          CPI R17, 6
+00006a f409                          BRNE STORE_TIME
+                                 
+00006b 2711                          CLR R17
+                                 
+                                 STORE_TIME:
+00006c 9300 0101                     STS DIG_UNI, R16
+00006e 9310 0102                     STS DIG_DEC, R17
                                  
                                  /****************************************/
-                                 // Interrupt routines
-                                 INTERRUPT_INC:
-                                 	// GUARDAR VALORES PREVIOS DE R16 Y LO QUE HAYA EN SREG
-000051 930f                      	PUSH R16
-000052 b70f                      	IN R16, SREG
-000053 930f                      	PUSH R16
-000054 931f                      	PUSH R17
-                                 	
-                                 	// HACER LECTURA DE VALORES EN EL BOTÓN
-000055 b106                      	IN R16, PINC
-000056 9b30                      	SBIS PINC, 0 // Skip Bit if Bit0 Set in Register
-000057 c007                      	RJMP CHECK_DECREMENT
+                                 // Botones
                                  
-                                 	// Rutina para aumentar los valores dentro del contador
-000058 9110 0100                 	LDS R17, C_LED
-00005a 951a                      	DEC R17
-00005b 701f                      	ANDI R17, 0x0F
-00005c 9310 0100                 	STS C_LED, R17
-00005e b915                      	OUT PORTB, R17
+                                 CHECK_BUTTONS:
                                  
-                                 CHECK_DECREMENT:
-00005f 9b31                      	SBIS PINC, 1 // Skip if Bit1 is Set
-000060 c007                      	RJMP ISR_END // Terminar rutina en caso ninguna esté apretada
+                                     ; Incremento
+000070 9100 0105                     LDS R16, FLAG_UP
+000072 3001                          CPI R16, 1
+000073 f451                          BRNE CHECK_DOWN
                                  
-                                 	//Rutina para disminuir los valores dentro del contador
-000061 9110 0100                     LDS  R17, C_LED
-000063 951a                          DEC  R17
-000064 701f                          ANDI R17, 0x0F
-000065 9310 0100                     STS  C_LED, R17
-000067 b915                          OUT  PORTB, R17
+000074 9100 0100                     LDS R16, LED_BIN
+000076 9503                          INC R16
+000077 700f                          ANDI R16, 0x0F
+000078 9300 0100                     STS LED_BIN, R16
+00007a b905                          OUT PORTB, R16
+00007b 2700                          CLR R16
+00007c 9300 0105                     STS FLAG_UP, R16
                                  
-                                 ISR_END:
-000068 911f                      	POP R17
-000069 910f                      	POP R16
-00006a bf0f                      	OUT SREG, R16
-00006b 910f                      	POP R16
+                                 CHECK_DOWN:
+                                 
+                                     ; Decremento
+00007e 9100 0106                     LDS R16, FLAG_DOWN
+000080 3001                          CPI R16, 1
+000081 f661                          BRNE MAIN_LOOP
+                                 
+000082 9100 0100                     LDS R16, LED_BIN
+000084 950a                          DEC R16
+000085 700f                          ANDI R16, 0x0F
+000086 9300 0100                     STS LED_BIN, R16
+000088 b905                          OUT PORTB, R16
+000089 2700                          CLR R16
+00008a 9300 0106                     STS FLAG_DOWN, R16
+                                 
+00008c cfc1                          RJMP MAIN_LOOP
+                                 
+                                 /****************************************/
+                                 // Subrutinas
+                                 
+                                 TIMER0_SETUP:
+00008d e002                          LDI R16, (1 << WGM01)
+00008e bd04                          OUT TCCR0A, R16
+00008f e003                          LDI R16, (1 << CS01) | (1 << CS00)
+000090 bd05                          OUT TCCR0B, R16
+000091 e90c                          LDI R16, 156
+000092 bd07                          OUT OCR0A, R16
+000093 e002                          LDI R16, (1 << OCIE0A)
+000094 9300 006e                     STS TIMSK0, R16
+000096 2700                          CLR R16
+000097 bd06                          OUT TCNT0, R16
+000098 9508                          RET
+                                 
+                                 /****************************************/
+                                 // Multiplex Display
+                                 
+                                 UPDATE_DISPLAY:
+                                 
+000099 930f                          PUSH R16
+00009a 931f                          PUSH R17
+00009b 93ef                          PUSH ZL
+00009c 93ff                          PUSH ZH
+                                 
+00009d 9140 0103                     LDS R20, MUX_SEL
+00009f 3040                          CPI R20, 0
+0000a0 f019                          BREQ LOAD_UNI
+                                 
+0000a1 9100 0102                     LDS R16, DIG_DEC
+0000a3 c002                          RJMP FETCH_SEG
+                                 
+                                 LOAD_UNI:
+0000a4 9100 0101                     LDS R16, DIG_UNI
+                                 
+                                 FETCH_SEG:
+0000a6 e0f1                          LDI ZH, HIGH(SEG_TAB<<1)
+0000a7 ebe0                          LDI ZL, LOW(SEG_TAB<<1)
+                                 
+0000a8 0fe0                          ADD ZL, R16
+0000a9 2711                          CLR R17
+0000aa 1ff1                          ADC ZH, R17
+                                 
+0000ab 9104                          LPM R16, Z
+0000ac b90b                          OUT PORTD, R16
+                                 
+0000ad 91ff                          POP ZH
+0000ae 91ef                          POP ZL
+0000af 911f                          POP R17
+0000b0 910f                          POP R16
+0000b1 9508                          RET
+                                 
+                                 /****************************************/
+                                 // ISR – TIMER0 (reordered first)
+                                 
+                                 TIMER0_ISR:
+0000b2 930f                          PUSH R16
+0000b3 b70f                          IN R16, SREG
+0000b4 930f                          PUSH R16
+                                 
+0000b5 9100 0104                     LDS R16, TICKS_10MS
+0000b7 9503                          INC R16
+0000b8 9300 0104                     STS TICKS_10MS, R16
+                                 
+0000ba 9100 0103                     LDS  R16, MUX_SEL
+0000bc e011                          LDI  R17, 1
+0000bd 2701                          EOR  R16, R17
+0000be 9300 0103                     STS  MUX_SEL, R16
+                                 
+0000c0 910f                          POP R16
+0000c1 bf0f                          OUT SREG, R16
+0000c2 910f                          POP R16
+0000c3 9518                          RETI
+                                 
+                                 /****************************************/
+                                 // ISR – PIN CHANGE
+                                 
+                                 PCINT_ISR:
+0000c4 930f                          PUSH R16
+0000c5 b70f                          IN R16, SREG
+0000c6 930f                          PUSH R16
+                                 
+0000c7 b106                          IN R16, PINC
+0000c8 ff00                          SBRS R16, PC0
+0000c9 c003                          RJMP SET_UP_FLAG
+                                 
+0000ca ff01                          SBRS R16, PC1
+0000cb c005                          RJMP SET_DOWN_FLAG
+0000cc c007                          RJMP EXIT_PCINT
+                                 
+                                 SET_UP_FLAG:
+0000cd e001                          LDI R16, 1
+0000ce 9300 0105                     STS FLAG_UP, R16
+0000d0 c003                          RJMP EXIT_PCINT
+                                 
+                                 SET_DOWN_FLAG:
+0000d1 e001                          LDI R16, 1
+0000d2 9300 0106                     STS FLAG_DOWN, R16
+                                 
+                                 EXIT_PCINT:
+0000d4 910f                          POP R16
+0000d5 bf0f                          OUT SREG, R16
+0000d6 910f                          POP R16
+0000d7 9518                          RETI
+                                 
+                                 /****************************************/
+                                 // Tabla de segmentos
+                                 
+                                 SEG_TAB:
+0000d8 307e
+0000d9 796d
+0000da 5b33
+0000db 705f
 
 
 RESOURCE USE INFORMATION
@@ -1219,38 +1354,38 @@ counted separately from r26..r31 here.
 "ATmega328P" register use summary:
 x  :   0 y  :   0 z  :   1 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16:  49 r17:  14 r18:   0 r19:   0 r20:   2 
-r21:   2 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
-r29:   0 r30:   1 r31:   1 
-Registers used: 7 out of 35 (20.0%)
+r13:   0 r14:   0 r15:   0 r16: 104 r17:  11 r18:   0 r19:   0 r20:   2 
+r21:   0 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
+r29:   0 r30:   4 r31:   4 
+Registers used: 6 out of 35 (17.1%)
 
 "ATmega328P" instruction use summary:
-.lds  :   0 .sts  :   0 adc   :   0 add   :   0 adiw  :   0 and   :   0 
-andi  :   4 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
-brcc  :   0 brcs  :   0 break :   0 breq  :   0 brge  :   0 brhc  :   0 
+.lds  :   0 .sts  :   0 adc   :   1 add   :   1 adiw  :   0 and   :   0 
+andi  :   2 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
+brcc  :   0 brcs  :   0 break :   0 breq  :   2 brge  :   0 brhc  :   0 
 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 brlt  :   0 brmi  :   0 
-brne  :   2 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
-brvs  :   0 bset  :   0 bst   :   0 call  :   0 cbi   :   2 cbr   :   0 
-clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :   0 cls   :   0 
+brne  :   5 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
+brvs  :   0 bset  :   0 bst   :   0 call  :   2 cbi   :   2 cbr   :   0 
+clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :   9 cls   :   0 
 clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 
-cpi   :   2 cpse  :   0 dec   :   3 eor   :   0 fmul  :   0 fmuls :   0 
-fmulsu:   0 icall :   0 ijmp  :   0 in    :   2 inc   :   1 jmp   :   0 
-ld    :   0 ldd   :   0 ldi   :  17 lds   :   6 lpm   :   2 lsl   :   0 
+cpi   :   7 cpse  :   0 dec   :   1 eor   :   1 fmul  :   0 fmuls :   0 
+fmulsu:   0 icall :   0 ijmp  :   0 in    :   3 inc   :   4 jmp   :   0 
+ld    :   0 ldd   :   0 ldi   :  20 lds   :  13 lpm   :   2 lsl   :   0 
 lsr   :   0 mov   :   0 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 
-neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :  14 pop   :   3 
-push  :   3 rcall :   0 ret   :   0 reti  :   1 rjmp  :   3 rol   :   0 
-ror   :   0 sbc   :   0 sbci  :   0 sbi   :   2 sbic  :   0 sbis  :   2 
-sbiw  :   0 sbr   :   0 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 
+neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :  17 pop   :   8 
+push  :   8 rcall :   0 ret   :   2 reti  :   2 rjmp  :  11 rol   :   0 
+ror   :   0 sbc   :   0 sbci  :   0 sbi   :   2 sbic  :   0 sbis  :   0 
+sbiw  :   0 sbr   :   0 sbrc  :   0 sbrs  :   2 sec   :   0 seh   :   0 
 sei   :   1 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 
-sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  13 
+sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  24 
 sub   :   0 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
-Instructions used: 19 out of 113 (16.8%)
+Instructions used: 26 out of 113 (23.0%)
 
 "ATmega328P" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x0000da    202     16    218   32768   0.7%
-[.dseg] 0x000100 0x000103      0      3      3    2048   0.1%
+[.cseg] 0x000000 0x0001ba    380     10    390   32768   1.2%
+[.dseg] 0x000100 0x000107      0      7      7    2048   0.3%
 [.eseg] 0x000000 0x000000      0      0      0    1024   0.0%
 
 Assembly complete, 0 errors, 0 warnings
