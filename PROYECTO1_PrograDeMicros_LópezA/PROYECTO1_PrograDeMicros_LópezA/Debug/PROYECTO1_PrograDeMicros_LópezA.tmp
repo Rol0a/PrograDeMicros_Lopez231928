@@ -1,0 +1,71 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc</FILE>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\Debug\PROYECTO1_PrograDeMicros_LópezA.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>PROYECTO1_PrograDeMicros_LópezA.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>PROYECTO1_PrograDeMicros_LópezA.map</FILE>
+  <FILE>PROYECTO1_PrograDeMicros_LópezA.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <DISPLAY_01><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>16</LINE></DISPLAY_01>
+  <DISPLAY_02><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>17</LINE></DISPLAY_02>
+  <DISPLAY_03><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>18</LINE></DISPLAY_03>
+  <DISPLAY_04><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>19</LINE></DISPLAY_04>
+  <COUNT_SEC><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>22</LINE></COUNT_SEC>
+  <COUNT_MIN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>23</LINE></COUNT_MIN>
+  <COUNT_HOUR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>24</LINE></COUNT_HOUR>
+  <DAY><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>27</LINE></DAY>
+  <MONTH><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>28</LINE></MONTH>
+  <ALARM_MIN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>31</LINE></ALARM_MIN>
+  <ALARM_HOUR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>32</LINE></ALARM_HOUR>
+  <MUX_SEL><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>35</LINE></MUX_SEL>
+  <TICKS_10MS><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>36</LINE></TICKS_10MS>
+  <FLAG_UP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>38</LINE></FLAG_UP>
+  <FLAG_DOWN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>39</LINE></FLAG_DOWN>
+  <FLAG_MODE><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>40</LINE></FLAG_MODE>
+  <FLAG_CONFIRM><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>41</LINE></FLAG_CONFIRM>
+  <BLINK_FLAG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>43</LINE></BLINK_FLAG>
+  <BLINK_COUNT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>44</LINE></BLINK_COUNT>
+  <ALARM_ACTIVE><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>46</LINE></ALARM_ACTIVE>
+  <INIT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>71</LINE></INIT>
+  <PCINT_ISR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>341</LINE></PCINT_ISR>
+  <TIMER0_ISR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>314</LINE></TIMER0_ISR>
+  <CONFIG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>80</LINE></CONFIG>
+  <TIMER0_SETUP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>351</LINE></TIMER0_SETUP>
+  <MAIN_LOOP><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>161</LINE></MAIN_LOOP>
+  <SHOW_D0><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>181</LINE></SHOW_D0>
+  <SHOW_D1><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>185</LINE></SHOW_D1>
+  <SHOW_D2><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>189</LINE></SHOW_D2>
+  <SHOW_D3><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>193</LINE></SHOW_D3>
+  <DRAW><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>196</LINE></DRAW>
+  <UPDATE_DISPLAY><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>218</LINE></UPDATE_DISPLAY>
+  <DISPLAY_MANAGER><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>211</LINE></DISPLAY_MANAGER>
+  <MODE_MANAGER><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>269</LINE></MODE_MANAGER>
+  <ALARM_MANAGER><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>305</LINE></ALARM_MANAGER>
+  <LOAD_D0><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>239</LINE></LOAD_D0>
+  <LOAD_D1><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>243</LINE></LOAD_D1>
+  <LOAD_D2><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>247</LINE></LOAD_D2>
+  <FETCH_SEG><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>250</LINE></FETCH_SEG>
+  <SEG_TAB><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>369</LINE></SEG_TAB>
+  <EDIT_ENGINE><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>280</LINE></EDIT_ENGINE>
+  <CLOCK_INCREMENT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>295</LINE></CLOCK_INCREMENT>
+  <STORE_MUX><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>331</LINE></STORE_MUX>
+  <MONTH_MAX_DAY><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_LópezA\PROYECTO1_PrograDeMicros_LópezA\main.asm</FILE><LINE>374</LINE></MONTH_MAX_DAY>
+ </LABELS>
+</ASSEMBLER_INFO>

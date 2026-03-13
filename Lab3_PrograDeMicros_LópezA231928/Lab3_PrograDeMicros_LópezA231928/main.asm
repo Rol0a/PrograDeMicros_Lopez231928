@@ -160,7 +160,7 @@ STORE_TIME:
 
 CHECK_BUTTONS:
 
-    ; Incremento
+    // Incremento
     LDS R16, FLAG_UP
     CPI R16, 1
     BRNE CHECK_DOWN
@@ -175,7 +175,7 @@ CHECK_BUTTONS:
 
 CHECK_DOWN:
 
-    ; Decremento
+    // Decremento
     LDS R16, FLAG_DOWN
     CPI R16, 1
     BRNE MAIN_LOOP
