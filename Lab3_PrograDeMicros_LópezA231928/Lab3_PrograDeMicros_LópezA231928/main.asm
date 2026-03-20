@@ -64,7 +64,7 @@ CONFIG:
 // Configuración de Puertos
 
     ; LEDs binarios
-    LDI R16, 0x0F
+    LDI R16, 0x1F
     OUT DDRB, R16
     CLR R16
     OUT PORTB, R16

@@ -1,0 +1,35 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc</FILE>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\Debug\TesteoTemp.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>TesteoTemp.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>TesteoTemp.map</FILE>
+  <FILE>TesteoTemp.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <PREV_STATE><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>9</LINE></PREV_STATE>
+  <INIT><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>25</LINE></INIT>
+  <PCINT1_ISR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>71</LINE></PCINT1_ISR>
+  <MAIN><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>65</LINE></MAIN>
+  <CHECK_BTN2><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>97</LINE></CHECK_BTN2>
+  <CHECK_BTN3><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>103</LINE></CHECK_BTN3>
+  <CHECK_BTN4><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>109</LINE></CHECK_BTN4>
+  <END_ISR><FILE>C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\TesteoTemp\TesteoTemp\main.asm</FILE><LINE>115</LINE></END_ISR>
+ </LABELS>
+</ASSEMBLER_INFO>

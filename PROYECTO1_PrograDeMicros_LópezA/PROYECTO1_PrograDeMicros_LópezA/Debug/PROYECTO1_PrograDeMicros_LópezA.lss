@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.8  C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_L�pezA\PROYECTO1_PrograDeMicros_L�pezA\main.asm Fri Mar 13 00:42:15 2026
+AVRASM ver. 2.2.8  C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_L�pezA\PROYECTO1_PrograDeMicros_L�pezA\main.asm Fri Mar 20 16:14:04 2026
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc'
 C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\PROYECTO1_PrograDeMicros_L�pezA\PROYECTO1_PrograDeMicros_L�pezA\main.asm(8): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc'
@@ -1070,11 +1070,16 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
 00010e                           FLAG_DOWN:      .BYTE 1
 00010f                           FLAG_MODE:      .BYTE 1
 000110                           FLAG_CONFIRM:   .BYTE 1
+000111                           FLAG_MINUTE:	.BYTE 1
                                  
-000111                           BLINK_FLAG:     .BYTE 1
-000112                           BLINK_COUNT:    .BYTE 1
+000112                           BLINK_FLAG:     .BYTE 1
+000113                           BLINK_COUNT:    .BYTE 1
                                  
-000113                           ALARM_ACTIVE:   .BYTE 1
+000114                           ALARM_ACTIVE:   .BYTE 1
+000115                           PREV_PINC: .BYTE 1
+                                 
+000116                           HALFSEC_CNT: .BYTE 1 
+000117                           SEC_CNT:     .BYTE 1   
                                  
                                  
                                  /*=========================================================
@@ -1089,226 +1094,440 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
                                  =                INTERRUPT VECTORS                       =*/
                                  .cseg
                                  .org 0x0000
-000000 c01c                      RJMP INIT
+000000 c01f                      RJMP INIT
                                  
                                  .org 0x0008
-000008 c0b5                      RJMP PCINT_ISR
+000008 c1d0                      RJMP PCINT_ISR
                                  
                                  .org 0x001C
-00001c c08d                      RJMP TIMER0_ISR
+00001c c16c                      RJMP TIMER0_ISR
                                  
+                                 .org 0x0016
+000016 c186                      RJMP TIMER1_ISR
+                                 
+                                 .org 0x0020
                                  /*=========================================================
                                  =                   STACK INITIALIZATION                 = */
                                  INIT:
-00001d ef0f                          LDI R16, LOW(RAMEND)
-00001e bf0d                          OUT SPL, R16
-00001f e008                          LDI R16, HIGH(RAMEND)
-000020 bf0e                          OUT SPH, R16
-000021 c000                          RJMP CONFIG
+000020 ef0f                          LDI R16, LOW(RAMEND)
+000021 bf0d                          OUT SPL, R16
+000022 e008                          LDI R16, HIGH(RAMEND)
+000023 bf0e                          OUT SPH, R16
+000024 c000                          RJMP CONFIG
                                  
                                  /*=========================================================
                                  =                   GENERAL CONFIGURATION                = */
                                  CONFIG:
                                  
                                  // ---- Clock prescaler → 1 MHz ----
-000022 e800                          LDI R16, (1 << CLKPCE)
-000023 9300 0061                     STS CLKPR, R16
-000025 e004                          LDI R16, 0b00000100
-000026 9300 0061                     STS CLKPR, R16
+000025 e800                      	LDI R16, (1 << CLKPCE)
+000026 9300 0061                 	STS CLKPR, R16
+000028 e004                      	LDI R16, 0b00000100
+000029 9300 0061                 	STS CLKPR, R16
                                  
                                  // ---- Disable USART ----
-000028 e000                          LDI R16, 0x00
-000029 9300 00c1                     STS UCSR0B, R16
+00002b e000                          LDI R16, 0x00
+00002c 9300 00c1                     STS UCSR0B, R16
                                  
                                  
                                  /*=========================================================
                                  =                   PORT CONFIGURATION                   =*/
                                  
                                  // ---- Multiplex transistors and Mode Representations (PORTB) ----
-00002b e70f                          LDI R16, 0x7F
-00002c b904                          OUT DDRB, R16
-00002d e101                          LDI R16, 0b00010001
-00002e b905                          OUT PORTB, R16
+00002e e70f                          LDI R16, 0x7F // 00111111, PB0-3 son salidas para transistores, PB4 es salida para alarma y PB5 salida para un LED de modo.
+00002f b904                          OUT DDRB, R16
+000030 e001                          LDI R16, 0b00000001
+000031 b905                          OUT PORTB, R16
                                  
                                  // ---- 7-Segment segments (PORTD) ----
-00002f ef0f                          LDI R16, 0xFF
-000030 b90a                          OUT DDRD, R16
-000031 b90b                          OUT PORTD, R16
+000032 ef0f                          LDI R16, 0xFF
+000033 b90a                          OUT DDRD, R16
+000034 b90b                          OUT PORTD, R16
                                  
                                  // ---- Buttons (PORTC) ----
-000032 e000                          LDI R16, 0x00
-000033 b907                          OUT DDRC, R16
-000034 e00f                          LDI R16, 0x0F
-000035 b908                          OUT PORTC, R16
+000035 e300                          LDI R16, 0x30 // 0b00110000, PORTC4 y PORTC5 son Salidas
+000036 b907                          OUT DDRC, R16
+000037 e00f                          LDI R16, 0x0F // 0b00011111, Se indica que las entradas son Pull Ups y que se inicia con el MODO 1 activado
+000038 b908                          OUT PORTC, R16
                                  
-                                 
+                                 	// NOTA: PC4 es el LED Amarillo (Modo Reloj), PC5 es el LED Verde (Modo Alarma), PB5 es el LED Azul (Modo Fecha)
                                  /*=========================================================
                                  =                 PIN CHANGE INTERRUPT                   =*/
-000036 e002                          LDI R16, (1 << PCIE1)
-000037 9300 0068                     STS PCICR, R16
-000039 e00f                          LDI R16, (1 << PCINT8)|(1 << PCINT9)|(1 << PCINT10)|(1 << PCINT11)
-00003a 9300 006c                     STS PCMSK1, R16
+000039 e002                          LDI R16, (1 << PCIE1)
+00003a 9300 0068                     STS PCICR, R16
+00003c e00f                          LDI R16, (1 << PCINT8)|(1 << PCINT9)|(1 << PCINT10)|(1 << PCINT11)
+00003d 9300 006c                     STS PCMSK1, R16
                                  
                                  /*=========================================================
                                  =                 TIMER0 CONFIGURATION                   =*/
-00003c d082                          RCALL TIMER0_SETUP
-                                 
+00003f d1be                          RCALL TIMER0_SETUP
+000040 d1c9                      	RCALL TIMER1_SETUP
                                  /*=========================================================
                                  =                 VARIABLE INITIALIZATION                =*/
-00003d 2744                          CLR MODE
-00003e 2755                          CLR ACTION
-00003f 2700                          CLR R16
+000041 e042                          LDI MODE, 0x02
+000042 2755                          CLR ACTION
+000043 2700                          CLR R16
                                  
-000040 9300 0100                     STS DISPLAY_01, R16
-000042 9300 0101                     STS DISPLAY_02, R16
-000044 9300 0102                     STS DISPLAY_03, R16
-000046 9300 0103                     STS DISPLAY_04, R16
+000044 9300 0100                     STS DISPLAY_01, R16
+000046 9300 0101                     STS DISPLAY_02, R16
+000048 9300 0102                     STS DISPLAY_03, R16
+00004a 9300 0103                     STS DISPLAY_04, R16
+                                 /* QUE INICIE EN CERO
+                                     STS COUNT_SEC, R16
+                                     STS COUNT_MIN, R16
+                                     STS COUNT_HOUR, R16
+                                 	*/
+                                 // ----HACER QUE EL CLOCK INICIE CON UN VALOR ----
+00004c e30a                      	LDI R16, 58
+00004d 9300 0105                 	STS COUNT_MIN, R16
                                  
-000048 9300 0104                     STS COUNT_SEC, R16
-00004a 9300 0105                     STS COUNT_MIN, R16
-00004c 9300 0106                     STS COUNT_HOUR, R16
+00004f e107                      	LDI R16, 23
+000050 9300 0106                 	STS COUNT_HOUR, R16
                                  
-00004e 9300 0107                     STS DAY, R16
-000050 9300 0108                     STS MONTH, R16
+000052 2700                      	CLR R16
+000053 9300 0104                 	STS COUNT_SEC, R16
                                  
-000052 9300 0109                     STS ALARM_MIN, R16
-000054 9300 010a                     STS ALARM_HOUR, R16
+                                   //STS DAY, R16
+                                  // STS MONTH, R16
                                  
-000056 9300 010b                     STS MUX_SEL, R16
-000058 9300 010c                     STS TICKS_10MS, R16
-00005a 9300 010d                     STS FLAG_UP, R16
-00005c 9300 010e                     STS FLAG_DOWN, R16
-00005e 9300 010f                     STS FLAG_MODE, R16
-000060 9300 0110                     STS FLAG_CONFIRM, R16
-000062 9300 0111                     STS BLINK_FLAG, R16
-000064 9300 0112                     STS BLINK_COUNT, R16
-000066 9300 0113                     STS ALARM_ACTIVE, R16
+                                 /* QUE INICIE EN UNA FECHA ESPECIFICA */
+000055 e104                      	LDI R16, 20
+000056 9300 0107                 	STS DAY, R16
                                  
-000068 9478                          SEI
+000058 e006                      	LDI R16, 6
+000059 9300 0108                 	STS MONTH, R16 
+                                 
+                                 // ----HACER QUE EL RELOJ INICIE CON UN VALOR -----
+                                  /*STS ALARM_MIN, R16
+                                     STS ALARM_HOUR, R16 */
+00005b e000                      	LDI R16, 0
+00005c 9300 0109                 	STS ALARM_MIN, R16
+                                 
+00005e e000                      	LDI R16, 0
+00005f 9300 010a                 	STS ALARM_HOUR, R16
+                                 
+000061 9300 010b                     STS MUX_SEL, R16
+000063 9300 010c                     STS TICKS_10MS, R16
+000065 9300 010d                     STS FLAG_UP, R16
+000067 9300 010e                     STS FLAG_DOWN, R16
+000069 9300 010f                     STS FLAG_MODE, R16
+00006b 9300 0110                     STS FLAG_CONFIRM, R16
+00006d 9300 0112                     STS BLINK_FLAG, R16
+00006f 9300 0113                     STS BLINK_COUNT, R16
+000071 9300 0114                     STS ALARM_ACTIVE, R16
+                                 
+000073 b106                      	IN   R16, PINC
+000074 9300 0115                     STS  PREV_PINC, R16
+000076 9478                          SEI
                                  
                                  
                                  /*=========================================================
                                  =                      MAIN LOOP                         =*/
                                  MAIN_LOOP:
                                  
-                                 // ---- 1. Multiplex Logic and update display values depending on MODE ----
-000069 9100 010b                     LDS R16, MUX_SEL
-00006b 9840                          CBI PORTC, PC0
-00006c 9841                          CBI PORTC, PC1
-00006d 9842                          CBI PORTC, PC2
-00006e 9843                          CBI PORTC, PC3
+                                 // ORDEN DE FUNCIONES QUE TIENE EL CODIGO
+000077 d09b                          RCALL MODE_MANAGER
+000078 d0c1                          RCALL EDIT_ENGINE
+000079 d0ca                          RCALL ALARM_MANAGER
                                  
-00006f 3000                          CPI R16, 0
-000070 f029                          BREQ SHOW_D0
+                                 // LLAMADO DE LOGICA DE MULTIPLEX
+00007a d007                          RCALL DISPLAY_MANAGER     // Llamado a los valores dentro de los displays
+00007b d060                          RCALL MUX_HANDLER         // Llamado al multiplexado correcto
                                  
-000071 3001                          CPI R16, 1
-000072 f029                          BREQ SHOW_D1
+00007c 9110 010f                 	LDS R17, FLAG_MODE
+00007e 3011                      	CPI R17, 1
+00007f f409                      	BRNE NO_TEST
                                  
-000073 3002                          CPI R16, 2
-000074 f029                          BREQ SHOW_D2
-000075 c006                          RJMP SHOW_D3
+000080 982d                      	CBI PORTB, PB5   // LED ON
                                  
-                                 
-                                 SHOW_D0:
-000076 9a40                          SBI PORTC, PC0
-000077 c005                          RJMP DRAW
-                                 
-                                 SHOW_D1:
-000078 9a41                          SBI PORTC, PC1
-000079 c003                          RJMP DRAW
-                                 
-                                 SHOW_D2:
-00007a 9a42                          SBI PORTC, PC2
-00007b c001                          RJMP DRAW
-                                 
-                                 SHOW_D3:
-00007c 9a43                          SBI PORTC, PC3
-                                 
-                                 DRAW:
-00007d 940e 0083                     CALL UPDATE_DISPLAY
-00007f d003                      	RCALL DISPLAY_MANAGER
-                                 
-                                 // ---- 2. Process mode state machine ----
-000080 d025                          RCALL MODE_MANAGER
-                                 
-                                 // ---- 3. Alarm comparison and buzzer ----
-000081 d027                          RCALL ALARM_MANAGER
-                                 
-000082 cfe6                          RJMP MAIN_LOOP
+                                 NO_TEST:
+000081 cff5                          RJMP MAIN_LOOP
                                  
                                  //			   NON-INTERRUPT ROUTINES                     //
                                  /*=========================================================
                                  =                DISPLAY MANAGER                         =*/
                                  DISPLAY_MANAGER:
-                                 // Depending on MODE:
-                                 //   Load CLOCK digits into DISPLAY_x
-                                 //   Load DATE digits into DISPLAY_x
-                                 //   Load ALARM digits into DISPLAY_x
-                                 // If edit mode:
-                                 //   Blink selected digit using BLINK_FLAG
-                                 UPDATE_DISPLAY:
+000082 930f                      	PUSH R16
                                  
-000083 930f                          PUSH R16
-000084 931f                          PUSH R17
-000085 93ef                          PUSH ZL
-000086 93ff                          PUSH ZH
+000083 2f04                          MOV R16, MODE
                                  
-000087 9140 010b                     LDS R20, MUX_SEL
+                                 // -------- CLOCK --------
+000084 3000                          CPI R16, 0
+000085 f059                          BREQ LOAD_CLOCK
                                  
-000089 3040                          CPI R20, 0
-00008a f039                          BREQ LOAD_D0
+000086 3001                          CPI R16, 1
+000087 f049                          BREQ LOAD_CLOCK
                                  
-00008b 3041                          CPI R20, 1
-00008c f041                          BREQ LOAD_D1
+                                 // -------- DATE --------
+000088 3002                          CPI R16, 2
+000089 f0b1                          BREQ LOAD_DATE
                                  
-00008d 3042                          CPI R20, 2
-00008e f049                          BREQ LOAD_D2
+00008a 3003                          CPI R16, 3
+00008b f0a1                          BREQ LOAD_DATE
                                  
-00008f 9100 0103                     LDS R16, DISPLAY_04
-000091 c008                          RJMP FETCH_SEG
+                                 // -------- ALARM --------
+00008c 3004                          CPI R16, 4
+00008d f109                          BREQ LOAD_ALARM
                                  
-                                 LOAD_D0:
-000092 9100 0100                     LDS R16, DISPLAY_01
-000094 c005                          RJMP FETCH_SEG
+00008e 3005                          CPI R16, 5
+00008f f0f9                          BREQ LOAD_ALARM
                                  
-                                 LOAD_D1:
-000095 9100 0101                     LDS R16, DISPLAY_02
-000097 c002                          RJMP FETCH_SEG
+000090 c049                          RJMP DISPLAY_EXIT
                                  
-                                 LOAD_D2:
-000098 9100 0102                     LDS R16, DISPLAY_03
+                                 // =========================
+                                 LOAD_CLOCK:
+                                     // Example split HH:MM
+000091 9100 0106                     LDS R16, COUNT_HOUR
+000093 d073                          RCALL SPLIT_DIGITS_2
+000094 9310 0100                     STS DISPLAY_01, R17
+000096 9320 0101                     STS DISPLAY_02, R18
                                  
-                                 FETCH_SEG:
-00009a e0f1                          LDI ZH, HIGH(SEG_TAB<<1)
-00009b e9e6                          LDI ZL, LOW(SEG_TAB<<1)
+000098 9100 0105                     LDS R16, COUNT_MIN
+00009a d06c                          RCALL SPLIT_DIGITS_2
+00009b 9310 0102                     STS DISPLAY_03, R17
+00009d 9320 0103                     STS DISPLAY_04, R18
+00009f c01d                          RJMP APPLY_BLINK
                                  
-00009c 0fe0                          ADD ZL, R16
-00009d 2711                          CLR R17
-00009e 1ff1                          ADC ZH, R17
+                                 // =========================
+                                 LOAD_DATE:
+0000a0 9100 0107                     LDS R16, DAY
+0000a2 d064                          RCALL SPLIT_DIGITS_2
+0000a3 9310 0100                     STS DISPLAY_01, R17
+0000a5 9320 0101                     STS DISPLAY_02, R18
                                  
-00009f 9104                          LPM R16, Z
-0000a0 b90b                          OUT PORTD, R16
+0000a7 9100 0108                     LDS R16, MONTH
+0000a9 d05d                          RCALL SPLIT_DIGITS_2
+0000aa 9310 0102                     STS DISPLAY_03, R17
+0000ac 9320 0103                     STS DISPLAY_04, R18
+0000ae c00e                          RJMP APPLY_BLINK
                                  
-0000a1 91ff                          POP ZH
-0000a2 91ef                          POP ZL
-0000a3 911f                          POP R17
-0000a4 910f                          POP R16
-0000a5 9508                          RET
+                                 // =========================
+                                 LOAD_ALARM:
+0000af 9100 010a                     LDS R16, ALARM_HOUR
+0000b1 d055                          RCALL SPLIT_DIGITS_2
+0000b2 9310 0100                     STS DISPLAY_01, R17
+0000b4 9320 0101                     STS DISPLAY_02, R18
                                  
+0000b6 9100 0109                     LDS R16, ALARM_MIN
+0000b8 d04e                          RCALL SPLIT_DIGITS_2
+0000b9 9310 0102                     STS DISPLAY_03, R17
+0000bb 9320 0103                     STS DISPLAY_04, R18
+                                 
+                                 // =========================
+                                 APPLY_BLINK:
+                                 
+                                 // Only in edit modes (odd modes)
+0000bd 2f04                          MOV R16, MODE
+0000be 7001                          ANDI R16, 0x01
+0000bf f0d1                          BREQ DISPLAY_EXIT
+                                 
+0000c0 9100 0112                     LDS R16, BLINK_FLAG
+0000c2 3000                          CPI R16, 0
+0000c3 f4b1                          BRNE DISPLAY_EXIT
+                                 
+                                 // Turn OFF selected digit
+0000c4 2f05                          MOV R16, ACTION
+0000c5 3000                          CPI R16, 0
+0000c6 f039                          BREQ BLANK_D0
+0000c7 3001                          CPI R16, 1
+0000c8 f049                          BREQ BLANK_D1
+0000c9 3002                          CPI R16, 2
+0000ca f051                          BREQ BLANK_D2
+0000cb 3003                          CPI R16, 3
+0000cc f059                          BREQ BLANK_D3
+0000cd c00c                          RJMP DISPLAY_EXIT
+                                 
+0000ce 2700                      BLANK_D0: CLR R16 // blank = 0
+0000cf 9300 0100                     STS DISPLAY_01, R16
+0000d1 c008                          RJMP DISPLAY_EXIT
+                                 
+                                 BLANK_D1:
+0000d2 9300 0101                     STS DISPLAY_02, R16
+0000d4 c005                          RJMP DISPLAY_EXIT
+                                 
+                                 BLANK_D2:
+0000d5 9300 0102                     STS DISPLAY_03, R16
+0000d7 c002                          RJMP DISPLAY_EXIT
+                                 
+                                 BLANK_D3:
+0000d8 9300 0103                     STS DISPLAY_04, R16
+                                 
+                                 DISPLAY_EXIT:
+0000da 910f                          POP R16
+0000db 9508                          RET
+                                 MUX_HANDLER:
+                                 
+0000dc 930f                          PUSH R16
+                                 
+                                 // ---- Turn OFF all digits ----
+0000dd 9828                      	CBI PORTB, PB0
+0000de 9829                      	CBI PORTB, PB1
+0000df 982a                      	CBI PORTB, PB2
+0000e0 982b                      	CBI PORTB, PB3
+                                 
+                                 // ---- Select active digit ----
+0000e1 9100 010b                     LDS R16, MUX_SEL
+                                 
+0000e3 3000                          CPI R16, 0
+0000e4 f041                          BREQ MUX_D0
+                                 
+0000e5 3001                          CPI R16, 1
+0000e6 f051                          BREQ MUX_D1
+                                 
+0000e7 3002                          CPI R16, 2
+0000e8 f061                          BREQ MUX_D2
+                                 
+                                 // ---- Default → D3 ----
+                                 MUX_D3:
+0000e9 9a2b                          SBI PORTB, PB3
+0000ea 9100 0103                     LDS R16, DISPLAY_04
+0000ec c00b                          RJMP LOAD_SEGMENTS
+                                 
+                                 MUX_D0:
+0000ed 9a28                          SBI PORTB, PB0
+0000ee 9100 0100                     LDS R16, DISPLAY_01
+0000f0 c007                          RJMP LOAD_SEGMENTS
+                                 
+                                 MUX_D1:
+0000f1 9a29                          SBI PORTB, PB1
+0000f2 9100 0101                     LDS R16, DISPLAY_02
+0000f4 c003                          RJMP LOAD_SEGMENTS
+                                 
+                                 MUX_D2:
+0000f5 9a2a                          SBI PORTB, PB2
+0000f6 9100 0102                     LDS R16, DISPLAY_03
+                                 
+                                 LOAD_SEGMENTS:
+0000f8 d002                          RCALL SEGMENT_LOOKUP
+                                 
+0000f9 910f                          POP R16
+0000fa 9508                          RET
+                                 
+                                 SEGMENT_LOOKUP:
+                                 
+0000fb 93ef                          PUSH ZL
+0000fc 93ff                          PUSH ZH
+                                 
+0000fd e0f4                          LDI ZH, HIGH(SEG_TAB<<1)
+0000fe e3e8                          LDI ZL, LOW(SEG_TAB<<1)
+                                 
+0000ff 0fe0                          ADD ZL, R16
+000100 f408                          BRCC NO_CARRY
+000101 95f3                          INC ZH
+                                 NO_CARRY:
+                                 
+000102 9104                          LPM R16, Z
+000103 b90b                          OUT PORTD, R16
+                                 
+000104 91ff                          POP ZH
+000105 91ef                          POP ZL
+000106 9508                          RET
+                                 
+                                 SPLIT_DIGITS_2:
+                                 
+000107 930f                          PUSH R16
+000108 933f                          PUSH R19
+                                 
+000109 2711                          CLR R17
+                                 
+                                 DIV10_LOOP:
+00010a 300a                          CPI R16, 10
+00010b f018                          BRLO DONE_DIV
+00010c 500a                          SUBI R16, 10
+00010d 9513                          INC R17
+00010e cffb                          RJMP DIV10_LOOP
+                                 
+                                 DONE_DIV:
+00010f 2f20                          MOV R18, R16
+                                 
+000110 913f                          POP R19
+000111 910f                          POP R16
+000112 9508                          RET
                                  /*=========================================================
                                  =                MODE MANAGER (FSM)                      =*/
-                                 MODE_MANAGER:
-                                 // If FLAG_MODE:
-                                 //   MODE++
-                                 //   Reset ACTION
-                                 // If MODE is EDIT:
-                                 //   Call EDIT_ENGINE
-0000a6 9508                      RET
+                                 MODE_MANAGER: // Checkeo de si la bandera fue activada o no
+000113 9100 010f                     LDS R16, FLAG_MODE
+000115 3001                          CPI R16, 1
+000116 f449                          BRNE EXIT_MODE
                                  
+000117 2700                          CLR R16
+000118 9300 010f                     STS FLAG_MODE, R16
                                  
+00011a 9543                          INC MODE
+00011b 3046                          CPI MODE, 6
+00011c f008                          BRLO OK
+00011d 2744                          CLR MODE
+                                 
+                                 OK:
+00011e 2755                          CLR ACTION
+00011f d001                          RCALL UPDATE_MODE_LEDS
+                                 
+                                 EXIT_MODE:
+000120 9508                          RET
+                                 	// CAMBIAR DE LED QUE SE ESTA USANDO 
+                                 UPDATE_MODE_LEDS:
+                                 
+000121 930f                          PUSH R16
+000122 931f                          PUSH R17
+                                 
+000123 b108                          IN   R16, PORTC
+000124 7c0f                          ANDI R16, 0b11001111     // LIMPIAR REGISTROS
+000125 b908                          OUT  PORTC, R16
+                                 
+000126 982d                          CBI PORTB, PB5           // LIMPIAR REGISTROS
+                                 
+                                 // Revisar modos de display
+000127 2f04                          MOV  R16, MODE
+000128 7001                          ANDI R16, 0x01           
+000129 f021                          BREQ SET_BASE_LED        
+                                 
+                                 // Revisar modos de parpadeo
+00012a 9100 0112                     LDS  R16, BLINK_FLAG
+00012c 3000                          CPI  R16, 0
+00012d f049                          BREQ EXIT_UPDATE         
+                                 
+                                 // Modos de Display 
+                                 SET_BASE_LED:
+                                 
+00012e 3042                          CPI MODE, 2
+00012f f030                          BRLO MODE_CLOCK
+                                 
+000130 3044                          CPI MODE, 4
+000131 f010                          BRLO MODE_DATE
+                                 
+                                 // Confirmacion de Displays de Modos
+                                 MODE_ALARM:
+000132 9a45                          SBI PORTC, PC5
+000133 c003                          RJMP EXIT_UPDATE
+                                 
+                                 MODE_DATE:
+000134 9a2d                          SBI PORTB, PB5
+000135 c001                          RJMP EXIT_UPDATE
+                                 
+                                 MODE_CLOCK:
+000136 9a44                          SBI PORTC, PC4
+                                 
+                                 EXIT_UPDATE:
+000137 911f                          POP R17
+000138 910f                          POP R16
+000139 9508                          RET
                                  /*=========================================================
                                  =                EDIT ENGINE                             =*/
                                  EDIT_ENGINE:
+                                 
+00013a 2f04                          MOV R16, MODE
+00013b 3001                          CPI R16, 1
+00013c f029                          BREQ DO_EDIT
+                                 
+00013d 3003                          CPI R16, 3
+00013e f019                          BREQ DO_EDIT
+                                 
+00013f 3005                          CPI R16, 5
+000140 f009                          BREQ DO_EDIT
+                                 
+000141 9508                          RET
+                                 
+                                 DO_EDIT:
                                  // If FLAG_UP:
                                  //   Increment selected value
                                  //   Validate limits
@@ -1318,100 +1537,323 @@ C:\Users\mlope\OneDrive\Documents\University\Programacion de microcontroladores\
                                  // If FLAG_CONFIRM:
                                  //   ACTION++
                                  //   If ACTION==4 → exit edit mode
-0000a7 9508                      RET
-                                 
-                                 
-                                 /*=========================================================
-                                 =                CLOCK INCREMENT (1s)                    =*/
-                                 CLOCK_INCREMENT:
-                                 // Increment COUNT_SEC
-                                 // If 60 → reset and increment COUNT_MIN
-                                 // If 60 → reset and increment COUNT_HOUR
-                                 // If 24 → reset to 0
-0000a8 9508                      RET
-                                 
+000142 9508                          RET
+000143 9508                      RET
                                  
                                  /*=========================================================
                                  =                ALARM MANAGER                           =*/
                                  ALARM_MANAGER:
-                                 // Compare COUNT_HOUR/MIN with ALARM_HOUR/MIN
-                                 // If equal → set ALARM_ACTIVE
-                                 // Toggle buzzer using BLINK_FLAG
-0000a9 9508                      RET
+000144 930f                          PUSH R16
+000145 931f                          PUSH R17
+                                 
+                                 // ---- Compare HOURS ----
+000146 9100 0106                     LDS R16, COUNT_HOUR
+000148 9110 010a                     LDS R17, ALARM_HOUR
+00014a 1701                          CP  R16, R17
+00014b f489                          BRNE ALARM_OFF
+                                 
+                                 // ---- Compare MINUTES ----
+00014c 9100 0105                     LDS R16, COUNT_MIN
+00014e 9110 0109                     LDS R17, ALARM_MIN
+000150 1701                          CP  R16, R17
+000151 f459                          BRNE ALARM_OFF
+                                 
+                                 // ---- MATCH → ACTIVATE ALARM ----
+                                 ALARM_ON:
+000152 e001                          LDI R16, 1
+000153 9300 0114                     STS ALARM_ACTIVE, R16
+                                 
+                                 // ---- Output on PB4 ----
+000155 9100 0112                     LDS R16, BLINK_FLAG
+000157 3000                          CPI R16, 0
+000158 f011                          BREQ ALARM_LOW
+                                 
+000159 9a2c                          SBI PORTB, PB4
+00015a c006                          RJMP ALARM_EXIT
+                                 
+                                 ALARM_LOW:
+00015b 982c                          CBI PORTB, PB4
+00015c c004                          RJMP ALARM_EXIT
+                                 
+                                 // ---- NO MATCH ----
+                                 ALARM_OFF:
+00015d 2700                          CLR R16
+00015e 9300 0114                     STS ALARM_ACTIVE, R16
+000160 982c                          CBI PORTB, PB4
+                                 
+                                 ALARM_EXIT:
+000161 911f                          POP R17
+000162 910f                          POP R16
+000163 9508                          RET
+                                 
+                                 /*=========================================================
+                                 =                DATE MANAGER                           =*/
+                                 DATE_INCREMENT:
+000164 930f                          PUSH R16
+000165 931f                          PUSH R17
+000166 93ef                          PUSH ZL
+000167 93ff                          PUSH ZH
+                                 
+                                 // Incremento de día de manera automatica.
+000168 9100 0107                     LDS R16, DAY
+00016a 9503                          INC R16
+                                 
+                                 // Llamado de tabla donde se encuentran los días máximos de cada mes.
+00016b 9110 0108                     LDS R17, MONTH
+00016d 951a                          DEC R17                 // index = MONTH - 1
+                                 
+00016e e0f4                          LDI ZH, HIGH(MONTH_MAX_DAY<<1)
+00016f e4e2                          LDI ZL, LOW(MONTH_MAX_DAY<<1)
+                                 
+000170 0fe1                          ADD ZL, R17
+000171 2711                          CLR R17
+000172 1ff1                          ADC ZH, R17
+                                 
+000173 9114                          LPM R17, Z              // R17 = max day
+                                 
+000174 1701                          CP R16, R17
+000175 f060                          BRLO STORE_DAY          // if DAY < MAX → store
+                                 
+                                 // Overflow de día
+000176 e001                          LDI R16, 1
+000177 9300 0107                     STS DAY, R16
+                                 
+                                 // Incremento AUTOMATICO de mes
+000179 9100 0108                     LDS R16, MONTH
+00017b 9503                          INC R16
+00017c 300d                          CPI R16, 13
+00017d f008                          BRLO STORE_MONTH
+                                 
+                                 // Overflow de Meses para evitar que pase de 12
+00017e e001                          LDI R16, 1
+                                 
+                                 STORE_MONTH:
+00017f 9300 0108                     STS MONTH, R16
+000181 c002                          RJMP DATE_EXIT
+                                 
+                                 STORE_DAY:
+000182 9300 0107                     STS DAY, R16
+                                 
+                                 DATE_EXIT:
+000184 91ff                          POP ZH
+000185 91ef                          POP ZL
+000186 911f                          POP R17
+000187 910f                          POP R16
+000188 9508                          RET
                                  
                                  //			     INTERRUPT ROUTINES                      //
                                  /*=========================================================
                                  =                TIMER0 ISR                              =*/
                                  TIMER0_ISR:
-0000aa 930f                          PUSH R16
-0000ab b70f                          IN R16, SREG
-0000ac 930f                          PUSH R16
+000189 930f                          PUSH R16
+00018a b70f                          IN R16, SREG
+00018b 930f                          PUSH R16
                                  
-                                     ; 10ms counter
-0000ad 9100 010c                     LDS R16, TICKS_10MS
-0000af 9503                          INC R16
-0000b0 9300 010c                     STS TICKS_10MS, R16
+                                     // Logica para Multiplex de un tick cada 10ms.
+00018c 9100 010c                     LDS R16, TICKS_10MS
+00018e 9503                          INC R16
+00018f 9300 010c                     STS TICKS_10MS, R16
                                  
-                                     ; Multiplex counter 0–3
-0000b2 9100 010b                     LDS R16, MUX_SEL
-0000b4 9503                          INC R16
-0000b5 3004                          CPI R16, 4
-0000b6 f008                          BRLO STORE_MUX
-0000b7 2700                          CLR R16
+000191 9100 010b                     LDS R16, MUX_SEL
+000193 9503                          INC R16
+000194 3004                          CPI R16, 4
+000195 f008                          BRLO STORE_MUX
+000196 2700                          CLR R16
                                  
                                  STORE_MUX:
-0000b8 9300 010b                     STS MUX_SEL, R16
+000197 9300 010b                     STS MUX_SEL, R16
                                  
-0000ba 910f                          POP R16
-0000bb bf0f                          OUT SREG, R16
-0000bc 910f                          POP R16
-0000bd 9518                          RETI
+000199 910f                          POP R16
+00019a bf0f                          OUT SREG, R16
+00019b 910f                          POP R16
+00019c 9518                          RETI
+                                 
+                                 /*=========================================================
+                                 =                TIMER1 ISR                              =*/
+                                 TIMER1_ISR:
+00019d 930f                          PUSH R16
+00019e 931f                          PUSH R17
+00019f b70f                          IN   R16, SREG
+0001a0 930f                          PUSH R16
+                                 
+                                 // Cuando se esta en un modo impar (edicion) manda señal para titilar de manera visible.
+0001a1 9100 0112                     LDS R16, BLINK_FLAG
+0001a3 e011                          LDI R17, 1
+0001a4 2701                          EOR R16, R17
+0001a5 9300 0112                     STS BLINK_FLAG, R16
+                                 
+                                 // Logica de guardado de segundo habilitado por el Timer1
+0001a7 9100 0116                     LDS R16, HALFSEC_CNT
+0001a9 9503                          INC R16
+0001aa 3004                          CPI R16, 4
+0001ab f130                          BRLO T1_STORE_HALF // Cuenta la cantidad de interrupciones que tiene (hace una interrupcion cada 0.25ms)
+                                 
+0001ac 2700                          CLR R16
+0001ad 9300 0116                     STS HALFSEC_CNT, R16 // Cuenta los medios segundos
+                                 
+0001af 9100 0117                     LDS R16, SEC_CNT // Cuenta los segundos completos.
+0001b1 9503                          INC R16
+0001b2 330c                          CPI R16, 60
+0001b3 f0d8                          BRLO T1_STORE_SEC
+                                 
+                                 // Incremento AUTOMATICO de minuto
+0001b4 2700                          CLR R16
+0001b5 9300 0117                     STS SEC_CNT, R16
+                                 
+0001b7 9100 0105                     LDS R16, COUNT_MIN
+0001b9 9503                          INC R16
+0001ba 330c                          CPI R16, 60
+0001bb f080                          BRLO T1_STORE_MIN
+                                 
+                                 // incremento AUTOMTICO de hora
+0001bc 2700                          CLR R16
+0001bd 9300 0105                     STS COUNT_MIN, R16
+                                 
+0001bf 9100 0106                     LDS R16, COUNT_HOUR
+0001c1 9503                          INC R16
+0001c2 3108                          CPI R16, 24
+0001c3 f028                          BRLO T1_STORE_HOUR
+                                 
+                                 // Cambio de Dia (Overflow al pasar de 23h)
+0001c4 2700                          CLR R16
+0001c5 9300 0106                     STS COUNT_HOUR, R16
+                                 
+0001c7 df9c                          RCALL DATE_INCREMENT
+0001c8 c00b                          RJMP EXIT_T1
+                                 
+                                 T1_STORE_HOUR:
+0001c9 9300 0106                     STS COUNT_HOUR, R16
+0001cb c008                          RJMP EXIT_T1
+                                 
+                                 T1_STORE_MIN:
+0001cc 9300 0105                     STS COUNT_MIN, R16
+0001ce c005                          RJMP EXIT_T1
+                                 
+                                 T1_STORE_SEC:
+0001cf 9300 0117                     STS SEC_CNT, R16
+0001d1 c002                          RJMP EXIT_T1
+                                 
+                                 T1_STORE_HALF:
+0001d2 9300 0116                     STS HALFSEC_CNT, R16
+                                 
+                                 EXIT_T1:
+0001d4 910f                          POP R16
+0001d5 bf0f                          OUT SREG, R16
+0001d6 911f                          POP R17
+0001d7 910f                          POP R16
+0001d8 9518                          RETI
                                  
                                  /*=========================================================
                                  =                PIN CHANGE ISR                          =*/
                                  PCINT_ISR:
-                                 // PC0 → FLAG_UP
-                                 // PC1 → FLAG_DOWN
-                                 // PC2 → FLAG_MODE
-                                 // PC3 → FLAG_CONFIRM
-0000be 9518                      RETI
+                                     // Practicas generales de ISR.
+0001d9 9a2d                         sbi portb, pb5
+0001da 930f                          PUSH R16
+0001db 931f                          PUSH R17
+0001dc b70f                          IN   R16, SREG
+0001dd 930f                          PUSH R16
                                  
+                                     // Lee los inputs
+0001de b106                          IN   R16, PINC
+0001df 700f                          ANDI R16, 0x0F      // Ignora PC4-PC5
+                                 
+                                     // Loica Inversa de PullUp, si detecta 0 entonces marca.
+0001e0 9500                          COM  R16
+0001e1 700f                          ANDI R16, 0x0F
+                                 
+                                     // PC0 → FLAG_UP
+0001e2 ff00                          SBRS R16, 0
+0001e3 c004                          RJMP CHECK_PC1
+0001e4 e011                          LDI  R17, 1
+0001e5 9310 010d                     STS  FLAG_UP, R17
+0001e7 c011                          RJMP EXIT_PCINT
+                                 
+                                 CHECK_PC1:
+                                     // PC1 → FLAG_DOWN
+0001e8 ff01                          SBRS R16, 1
+0001e9 c004                          RJMP CHECK_PC2
+0001ea e011                          LDI  R17, 1
+0001eb 9310 010e                     STS  FLAG_DOWN, R17
+0001ed c00b                          RJMP EXIT_PCINT
+                                 
+                                 CHECK_PC2:
+                                     // PC2 → FLAG_MODE
+0001ee ff02                          SBRS R16, 2
+0001ef c004                          RJMP CHECK_PC3
+0001f0 e011                          LDI  R17, 1
+0001f1 9310 010f                     STS  FLAG_MODE, R17
+0001f3 c005                          RJMP EXIT_PCINT
+                                 
+                                 CHECK_PC3:
+                                     // PC3 → FLAG_CONFIRM
+0001f4 ff03                          SBRS R16, 3
+0001f5 c003                          RJMP EXIT_PCINT
+0001f6 e011                          LDI  R17, 1
+0001f7 9310 0110                     STS  FLAG_CONFIRM, R17
+                                 
+                                 EXIT_PCINT:
+0001f9 910f                          POP  R16
+0001fa bf0f                          OUT  SREG, R16
+0001fb 911f                          POP  R17
+0001fc 910f                          POP  R16
+0001fd 9518                          RETI
                                  
                                  /*=========================================================
-                                 =                TIMER0 SETUP                            =*/
+                                 =                TIMER0 Y TIMER1 SETUP                     =*/
                                  TIMER0_SETUP:
-0000bf e002                          LDI R16, (1 << WGM01)
-0000c0 bd04                          OUT TCCR0A, R16
-0000c1 e003                          LDI R16, (1 << CS01) | (1 << CS00)
-0000c2 bd05                          OUT TCCR0B, R16
-0000c3 e90c                          LDI R16, 156
-0000c4 bd07                          OUT OCR0A, R16
-0000c5 e002                          LDI R16, (1 << OCIE0A)
-0000c6 9300 006e                     STS TIMSK0, R16
-0000c8 2700                          CLR R16
-0000c9 bd06                          OUT TCNT0, R16
-0000ca 9508                      RET
+                                     // Configurar CTC con Prescaler de 64 con una comparacion de 62 e interrupciones habilitadas
+0001fe e002                          LDI R16, (1 << WGM01)
+0001ff bd04                          OUT TCCR0A, R16
                                  
+000200 e003                          LDI R16, (1 << CS01) | (1 << CS00)
+000201 bd05                          OUT TCCR0B, R16
                                  
+000202 e30e                          LDI R16, 62
+000203 bd07                          OUT OCR0A, R16
+                                 
+000204 e002                          LDI R16, (1 << OCIE0A)
+000205 9300 006e                     STS TIMSK0, R16
+                                 
+000207 2700                          CLR R16
+000208 bd06                          OUT TCNT0, R16
+000209 9508                      RET
+                                   // Configura CTC con Prescaler de 1024 con valor de comparacion de 488 e interrupciones habilitadas
+                                 TIMER1_SETUP:
+00020a e00d                          LDI R16, (1 << WGM12) | (1 << CS12) | (1 << CS10)
+00020b 9300 0081                     STS TCCR1B, R16
+                                 
+00020d ee08                          LDI R16, LOW(488)
+00020e 9300 0088                     STS OCR1AL, R16
+000210 e001                          LDI R16, HIGH(488)
+000211 9300 0089                     STS OCR1AH, R16
+                                 
+000213 e002                          LDI R16, (1 << OCIE1A)
+000214 9300 006f                     STS TIMSK1, R16
+                                 
+000216 2700                          CLR R16
+000217 9300 0085                     STS TCNT1H, R16
+000219 9300 0084                     STS TCNT1L, R16
+                                 
+00021b 9508                      RET
                                  /*=========================================================
                                  =                PROGRAM MEMORY TABLES                   =*/
                                  
                                  // ---- Segment table (0–9) ----
                                  SEG_TAB:
-0000cb 307e
-0000cc 796d
-0000cd 5b33
-0000ce 705f
-0000cf 7b7f                      .DB 0x7E,0x30,0x6D,0x79,0x33,0x5B,0x5F,0x70,0x7F,0x7B
+00021c 307e
+00021d 796d
+00021e 5b33
+00021f 705f
+000220 7b7f                      .DB 0x7E,0x30,0x6D,0x79,0x33,0x5B,0x5F,0x70,0x7F,0x7B
                                  
                                  // ---- Month Maximum Day Table (index = month-1) ----
                                  // Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
                                  MONTH_MAX_DAY:
-0000d0 1c1f
-0000d1 1e1f
-0000d2 1e1f
-0000d3 1f1f
-0000d4 1f1e
+000221 1c1f
+000222 1e1f
+000223 1e1f
+000224 1f1f
+000225 1f1e
 
 
 RESOURCE USE INFORMATION
@@ -1429,40 +1871,40 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 "ATmega328P" register use summary:
-x  :   0 y  :   0 z  :   1 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
+x  :   0 y  :   0 z  :   2 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16:  83 r17:   4 r18:   0 r19:   0 r20:   5 
-r21:   1 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
-r29:   0 r30:   4 r31:   4 
-Registers used: 7 out of 35 (20.0%)
+r13:   0 r14:   0 r15:   0 r16: 226 r17:  41 r18:   7 r19:   2 r20:  10 
+r21:   3 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
+r29:   0 r30:   8 r31:   8 
+Registers used: 9 out of 35 (25.7%)
 
 "ATmega328P" instruction use summary:
-.lds  :   0 .sts  :   0 adc   :   1 add   :   1 adiw  :   0 and   :   0 
-andi  :   0 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
-brcc  :   0 brcs  :   0 break :   0 breq  :   6 brge  :   0 brhc  :   0 
-brhs  :   0 brid  :   0 brie  :   0 brlo  :   1 brlt  :   0 brmi  :   0 
-brne  :   0 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
-brvs  :   0 bset  :   0 bst   :   0 call  :   1 cbi   :   4 cbr   :   0 
-clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :   6 cls   :   0 
-clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 
-cpi   :   7 cpse  :   0 dec   :   0 eor   :   0 fmul  :   0 fmuls :   0 
-fmulsu:   0 icall :   0 ijmp  :   0 in    :   1 inc   :   2 jmp   :   0 
-ld    :   0 ldd   :   0 ldi   :  18 lds   :   8 lpm   :   2 lsl   :   0 
-lsr   :   0 mov   :   0 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 
-neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :  14 pop   :   6 
-push  :   6 rcall :   4 ret   :   6 reti  :   2 rjmp  :  12 rol   :   0 
-ror   :   0 sbc   :   0 sbci  :   0 sbi   :   4 sbic  :   0 sbis  :   0 
-sbiw  :   0 sbr   :   0 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 
+.lds  :   0 .sts  :   0 adc   :   1 add   :   2 adiw  :   0 and   :   0 
+andi  :   5 asr   :   0 bclr  :   0 bld   :   0 brbc  :   0 brbs  :   0 
+brcc  :   1 brcs  :   0 break :   0 breq  :  20 brge  :   0 brhc  :   0 
+brhs  :   0 brid  :   0 brie  :   0 brlo  :  11 brlt  :   0 brmi  :   0 
+brne  :   5 brpl  :   0 brsh  :   0 brtc  :   0 brts  :   0 brvc  :   0 
+brvs  :   0 bset  :   0 bst   :   0 call  :   0 cbi   :   8 cbr   :   0 
+clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :  17 cls   :   0 
+clt   :   0 clv   :   0 clz   :   0 com   :   1 cp    :   3 cpc   :   0 
+cpi   :  31 cpse  :   0 dec   :   1 eor   :   1 fmul  :   0 fmuls :   0 
+fmulsu:   0 icall :   0 ijmp  :   0 in    :   6 inc   :  11 jmp   :   0 
+ld    :   0 ldd   :   0 ldi   :  39 lds   :  30 lpm   :   4 lsl   :   0 
+lsr   :   0 mov   :   6 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 
+neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :  17 pop   :  22 
+push  :  22 rcall :  16 ret   :  13 reti  :   3 rjmp  :  33 rol   :   0 
+ror   :   0 sbc   :   0 sbci  :   0 sbi   :   9 sbic  :   0 sbis  :   0 
+sbiw  :   0 sbr   :   0 sbrc  :   0 sbrs  :   4 sec   :   0 seh   :   0 
 sei   :   1 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 
-sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  28 
-sub   :   0 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
-Instructions used: 23 out of 113 (20.4%)
+sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  70 
+sub   :   0 subi  :   1 swap  :   0 tst   :   0 wdr   :   0 
+Instructions used: 32 out of 113 (28.3%)
 
 "ATmega328P" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x0001ac    354     22    376   32768   1.1%
-[.dseg] 0x000100 0x000114      0     20     20    2048   1.0%
+[.cseg] 0x000000 0x00044e   1024     22   1046   32768   3.2%
+[.dseg] 0x000100 0x000118      0     24     24    2048   1.2%
 [.eseg] 0x000000 0x000000      0      0      0    1024   0.0%
 
 Assembly complete, 0 errors, 0 warnings
