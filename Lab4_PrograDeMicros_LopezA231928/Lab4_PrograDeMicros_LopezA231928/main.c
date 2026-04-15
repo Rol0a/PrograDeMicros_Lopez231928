@@ -1,213 +1,255 @@
-/*
- * Lab4_PrograDeMicros_LopezA231928
- * Author: Rodrigo Lopez
- * Description: Pre-Lab, Laboratorio y Post-Lab. Lectura de ADC, Interrupciones, Timers.
- */
+
+/* * 
+	Lab4_PrograDeMicros_LopezA231928 
+	Author: Rodrigo Lopez 
+	Description: Pre-Lab, Laboratorio y Post-Lab. Lectura de ADC, Interrupciones, Timers. 
+*/ /****************************************/
+
 /****************************************/
-// Encabezado (Libraries)
+// Libraries
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-// Variables
-#define T1Value 0x004E // CTC 5ms
+/****************************************/
+// Global Variables
 
-volatile uint8_t Valor_ADC = 0;
-volatile uint8_t CONTADOR_LEDs = 0;
-volatile uint8_t BANDERA_BTN_incremento = 0;
-volatile uint8_t BANDERA_BTN_decremento = 0;
+#define TIMER1_COMPARE_VALUE 0x004E   // Valor de CTC para 5ms
 
-volatile uint8_t prev_PC0 = 1;  
-volatile uint8_t prev_PC1 = 1;
+volatile uint8_t adc_value = 0;          // Lectura del ADC
+volatile uint8_t led_counter = 0;        // Contador de LEDS (Valor)
 
-volatile uint8_t TRANSISTOR = 0;	// 0=LEDs 1=DisplayUnidades 2=DisplayDecenas
+volatile uint8_t flag_btn_increment = 0; // Increment button flag
+volatile uint8_t flag_btn_decrement = 0; // Decrement button flag
 
-// inicio en 00 
-volatile uint8_t patron_unidades = 0x40;
-volatile uint8_t patron_decenas = 0x40;
+volatile uint8_t prev_PC0 = 1;           // Valor anterior del botón 0
+volatile uint8_t prev_PC1 = 1;           // Valor anterior del botón 1
 
-const uint8_t SEGMENTOS[16] = {
-    0x40,    // 0
-    0x75,    // 1
-    0x22,    // 2
-    0x24,    // 3
-    0x15,    // 4
-    0x0C,    // 5
-    0x08,    // 6
-    0x65,    // 7
-    0x00,    // 8
-    0x05,    // 9
-    0x01,    // A
-    0x18,    // b
-    0x4A,    // C
-    0x30,    // d
-    0x0A,    // E
-    0x0B	 // F
+volatile uint8_t active_transistor = 0;  // 0=LEDs, 1=Units display, 2=Tens display
+
+// Mostrar inicialmente 00
+volatile uint8_t pattern_units = 0x40;
+volatile uint8_t pattern_tens  = 0x40;
+
+/****************************************/
+// TABLA DE VALORES DE DISPLAY
+
+const uint8_t SEGMENT_MAP[16] = {
+	0x40, // 0
+	0x75, // 1
+	0x22, // 2
+	0x24, // 3
+	0x15, // 4
+	0x0C, // 5
+	0x08, // 6
+	0x65, // 7
+	0x00, // 8
+	0x05, // 9
+	0x01, // A
+	0x18, // b
+	0x4A, // C
+	0x30, // d
+	0x0A, // E
+	0x0B  // F
 };
 
 /****************************************/
-// Function prototypes
+// Function Prototypes
+
 void setup(void);
 void init_ADC(void);
-void init_TMR1(void);
+void init_Timer1(void);
 void init_PinChange(void);
 
 /****************************************/
 // Main Function
+
 int main(void)
 {
-	cli();
-	setup();
-	init_PinChange();
-	init_ADC();
-	init_TMR1();
-	sei();
+	cli();                  // Deshabilitar interrupciones
+	setup();                // Configurar puertos y salidas
+	init_PinChange();       // Enable pin change interrupts
+	init_ADC();             // Configurar ADC
+	init_Timer1();          // Configurar Timer1
+	sei();                  // Habilitar interrupciones
 	
-	// Iniciar primera conversión ADC
+	// Primera Lectura de ADC
 	ADCSRA |= (1 << ADSC);
-		
-	while (1){
-		
-		// Verificar banderas btns
-		if (BANDERA_BTN_incremento){
-			BANDERA_BTN_incremento = 0;	// restablecer
-			CONTADOR_LEDs++;
+	
+	while (1)
+	{
+		// Lógica de Botones
+		if (flag_btn_increment)
+		{
+			flag_btn_increment = 0;
+			led_counter++;
 		}
-		if (BANDERA_BTN_decremento){
-			BANDERA_BTN_decremento = 0;	// restablecer
-			CONTADOR_LEDs--;
+
+		if (flag_btn_decrement)
+		{
+			flag_btn_decrement = 0;
+			led_counter--;
 		}
-		
-		
 	}
 }
 
 /****************************************/
-// NON-Interrupt subroutines
-void setup(void){
-	// Definir frecuencia de Reloj 1MHz
-	CLKPR	= (1<<CLKPCE);
-	CLKPR	= (1<<CLKPS2);
-	
-	UCSR0B	= 0x00;	// Apagar pines por UART
-	
-	// PORTD -> Salida [LEDs + Display]
-	DDRD	= 0xFF;
-	PORTD	= 0xFF;           // Apagados
+// Setup function (I/O configuration)
 
-	// PORTB -> Salida [Transistores]
-	DDRB	|= (1 << PINB1) | (1 << PINB2) | (1 << PINB3) | (1 << PINB0);
-	PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB3) | (1 << PB0)); // todos apagados
+void setup(void)
+{
+	// Set system clock to 1 MHz (prescaler = 16)
+	CLKPR = (1 << CLKPCE);
+	CLKPR = (1 << CLKPS2);
 
-	// PC0,PC1 -> Entrada [Botones] pull-up - [Potenciometro]
-	DDRC	&= ~((1 << PC0) | (1 << PC1) | (1 << PC5));
-	PORTC	|= (1 << PC0) | (1 << PC1);
+	// Disable UART
+	UCSR0B = 0x00;
+
+	// PORTD -> Output (LEDs + 7-segment segments)
+	DDRD = 0xFF;
+	PORTD = 0xFF; // Todo inicia apagado.
+
+	// PORTB -> Output (control de transistores)
+	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB3);
+	PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB3));
+
+	// PORTC -> Inputs
+	// PC0, PC1: buttons (with pull-up)
+	// PC2: analog input (ADC)
+	DDRC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
+	PORTC |= (1 << PC0) | (1 << PC1); // Enable pull-ups
 }
 
-void init_PinChange(void){
-	// Habilitar interrupciones para PCINT1 (PORTC)
-	PCICR |= (1 << PCIE1);
-	// PC0 (PCINT8) - PC1 (PCINT9)
-	PCMSK1 |= (1 << PCINT8) | (1 << PCINT9);
+/****************************************/
+// Pin Change Interrupt Initialization
+
+void init_PinChange(void)
+{
+	PCICR |= (1 << PCIE1);                 // Enable PCINT[14:8] (PORTC)
+	PCMSK1 |= (1 << PCINT8) | (1 << PCINT9); // Enable PC0 and PC1 interrupts
 }
 
-void init_TMR1(void){
+/****************************************/
+// Timer1 Initialization (CTC mode)
 
+void init_Timer1(void)
+{
 	TCCR1B = 0;
-	
-	// Modo CTC
-	TCCR1B |= (1 << WGM12);
-	// Prescaler 64
-	TCCR1B |= (1 << CS11) | (1 << CS10);
-	// Valor para comparación 
-	OCR1A = T1Value;
-	// Habilitar interrupción
-	TIMSK1 |= (1 << OCIE1A);
-	TCNT1 = 0; // Iniciar contador en 0
-}
 
-void init_ADC(void){
-	ADMUX	= 0;
-	// Aref = AVcc; Justificacion a la izquierda; Pin PC2 (ADC2)
-	ADMUX	|= (1<<REFS0) | (1<<ADLAR) | (1<<MUX1) ;
-	
-	ADCSRA	= 0;
-	// Habilitar ADC y seleccionar prescaler = 8 -- 1MHz/8=125kHz
-	ADCSRA	|= (1<<ADEN) | (1<<ADPS1) | (1<<ADPS0);
-	ADCSRA	|= (1 << ADIE);	// Hab interrupciones
+	TCCR1B |= (1 << WGM12); // CTC mode
+	TCCR1B |= (1 << CS11) | (1 << CS10); // Prescaler = 64
+
+	OCR1A = TIMER1_COMPARE_VALUE; // Valor de Comparación
+
+	TIMSK1 |= (1 << OCIE1A); // Comparación
+	TCNT1 = 0; // Reiniciar contador
 }
 
 /****************************************/
-// Interrupt routines
+// ADC Initialization
 
-ISR(PCINT1_vect){
-	// Leer PORTC
-	uint8_t estado_actual = PINC;
-	
-	// Selección de pin específico y máscara
-	uint8_t actual_PC0 = (estado_actual >> PC0) & 1;
-	
-	if ((prev_PC0 == 1) && (actual_PC0 == 0)){
-		BANDERA_BTN_decremento = 1;
-	}
-	prev_PC0 = actual_PC0; // Actualizar estado
-	
-	// Selección de pin específico y máscara
-	uint8_t actual_PC1 = (estado_actual >> PC1) & 1;
-	
-	if ((prev_PC1 == 1) && (actual_PC1 == 0)){
-		BANDERA_BTN_incremento = 1;
-	}
-	prev_PC1 = actual_PC1; // Actualizar estado
-	
+void init_ADC(void)
+{
+	ADMUX = 0;
+
+	// Referencia de Voltaje, Left Section Selector, ADC2 Mux Selector.
+	ADMUX |= (1 << REFS0) | (1 << ADLAR) | (1 << MUX1);
+
+	ADCSRA = 0;
+
+	// Enable ADC, prescaler = 8 (125 kHz ADC clock)
+	ADCSRA |= (1 << ADEN) | (1 << ADPS1) | (1 << ADPS0);
+
+	ADCSRA |= (1 << ADIE); // Enable ADC interrupt
 }
 
-ISR(TIMER1_COMPA_vect){
-	// Actualizar transistor - PORTB
-	PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB3)); // apagar todos
-	
-	// Encender seleccionado
-	switch (TRANSISTOR){
-		case 0:		// LEDS
-			PORTD = ~CONTADOR_LEDs; 
-			PORTB |= (1 << PB1); 
-			break;
-		case 1:		// DISPLAY unidades (nibble bajo)
-			PORTD = patron_unidades;
-			PORTB |= (1 << PB2); 
-			break;
-		case 2:		// DISPLAY decenas (nibble alto)
-			PORTD = patron_decenas;
-			PORTB |= (1 << PB3); 
-			break;
+/****************************************/
+// Interrupt Service Routines
+
+// Pin Change Interrupt (botón)
+ISR(PCINT1_vect)
+{
+	uint8_t current_state = PINC;
+
+	// --- PC0 (Decrement button) ---
+	uint8_t current_PC0 = (current_state >> PC0) & 1;
+
+	// Antirrebote en código
+	if ((prev_PC0 == 1) && (current_PC0 == 0))
+	{
+		flag_btn_decrement = 1;
 	}
-	
-	// Cambiar transistor
-	TRANSISTOR++;
-	if (TRANSISTOR == 3){
-		TRANSISTOR = 0;
+	prev_PC0 = current_PC0;
+
+	// --- PC1 (Increment button) ---
+	uint8_t current_PC1 = (current_state >> PC1) & 1;
+
+	if ((prev_PC1 == 1) && (current_PC1 == 0))
+	{
+		flag_btn_increment = 1;
 	}
-	
-	// Comparación Contador y Lectura ADC
-	if (Valor_ADC > CONTADOR_LEDs) {
-		PORTB |= (1 << PB0);   // enciende LED
-		} else {
-		PORTB &= ~(1 << PB0);  // apaga LED
-	}	
+	prev_PC1 = current_PC1;
 }
 
-ISR(ADC_vect){
-	Valor_ADC = ADCH;			// Lectura, Justificación Izquierda
-	
-	// Convertir a dos dígitos hexadecimales
-	uint8_t nible_alto = (Valor_ADC>>4) & 0x0F;
-	uint8_t nible_bajo = Valor_ADC & 0x0F;
-	
-	patron_decenas = SEGMENTOS[nible_alto];
-	patron_unidades = SEGMENTOS[nible_bajo];
-	
-	ADCSRA |= (1 << ADSC);		// Comenzar siguiente conversión
+/****************************************/
+// Timer1 Compare Interrupt (Multiplexing + Logic)
+
+ISR(TIMER1_COMPA_vect)
+{
+	// Todos inician apagados.
+	PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB3));
+
+	// Multiplexado que hace el cambio
+	switch (active_transistor)
+	{
+		case 0: // LEDs
+		PORTD = ~led_counter;
+		PORTB |= (1 << PB1);
+		break;
+
+		case 1: // Display de Unidades
+		PORTD = pattern_units;
+		PORTB |= (1 << PB2);
+		break;
+
+		case 2: // Display de Decenas
+		PORTD = pattern_tens;
+		PORTB |= (1 << PB3);
+		break;
+	}
+
+	// Multiplexado
+	active_transistor++;
+	if (active_transistor == 3)
+	{
+		active_transistor = 0;
+	}
+
+	// Compara el valor del ADC con el valor dentro del contador de Botón.
+	if (adc_value > led_counter)
+	{
+		PORTB |= (1 << PB0);  // Enciende Alarma
+	}
+	else
+	{
+		PORTB &= ~(1 << PB0); // Apaga Alarma
+	}
 }
 
+/****************************************/
+// Lectura y Conversión de ADC (ISR)
 
+ISR(ADC_vect)
+{
+	adc_value = ADCH; // Lee los valores del ADC
 
+	// Divide los valores para los displays en los nibbles a mostrar
+	uint8_t high_nibble = (adc_value >> 4) & 0x0F;
+	uint8_t low_nibble  = adc_value & 0x0F;
 
+	// Hace un match con la lista de los valores
+	pattern_tens  = SEGMENT_MAP[high_nibble];
+	pattern_units = SEGMENT_MAP[low_nibble];
+
+	// Inicia nuevos valores para ADC
+	ADCSRA |= (1 << ADSC);
+}
