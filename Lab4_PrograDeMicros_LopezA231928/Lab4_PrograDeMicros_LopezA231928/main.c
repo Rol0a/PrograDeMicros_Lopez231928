@@ -27,29 +27,14 @@ volatile uint8_t prev_PC1 = 1;           // Valor anterior del botón 1
 volatile uint8_t active_transistor = 0;  // 0=LEDs, 1=Units display, 2=Tens display
 
 // Mostrar inicialmente 00
-volatile uint8_t pattern_units = 0x40;
-volatile uint8_t pattern_tens  = 0x40;
+volatile uint8_t pattern_units = 0x7E;
+volatile uint8_t pattern_tens  = 0x7E;
 
 /****************************************/
 // TABLA DE VALORES DE DISPLAY
 
 const uint8_t SEGMENT_MAP[16] = {
-	0x40, // 0
-	0x75, // 1
-	0x22, // 2
-	0x24, // 3
-	0x15, // 4
-	0x0C, // 5
-	0x08, // 6
-	0x65, // 7
-	0x00, // 8
-	0x05, // 9
-	0x01, // A
-	0x18, // b
-	0x4A, // C
-	0x30, // d
-	0x0A, // E
-	0x0B  // F
+0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B, 0x77, 0x1F, 0x4E, 0x3D, 0x4F, 0x47
 };
 
 /****************************************/
@@ -174,7 +159,7 @@ ISR(PCINT1_vect)
 	uint8_t current_PC0 = (current_state >> PC0) & 1;
 
 	// Antirrebote en código
-	if ((prev_PC0 == 1) && (current_PC0 == 0))
+	if ((prev_PC0 == 0) && (current_PC0 == 1))
 	{
 		flag_btn_decrement = 1;
 	}
@@ -183,7 +168,7 @@ ISR(PCINT1_vect)
 	// --- PC1 (Increment button) ---
 	uint8_t current_PC1 = (current_state >> PC1) & 1;
 
-	if ((prev_PC1 == 1) && (current_PC1 == 0))
+	if ((prev_PC1 == 0) && (current_PC1 == 1))
 	{
 		flag_btn_increment = 1;
 	}
