@@ -8,10 +8,10 @@ void ADC_init(void)
 	ADMUX = (1 << REFS0);
 
 	ADCSRA = (1 << ADEN) |
-	(1 << ADIE) |
-	(1 << ADPS2) |
-	(1 << ADPS1) |
-	(1 << ADPS0);
+	         (1 << ADIE) |
+	         (1 << ADPS2) |
+	         (1 << ADPS1) |
+	         (1 << ADPS0);
 
 	DIDR0 = 0x3F;
 
@@ -24,13 +24,13 @@ ISR(ADC_vect)
 
 	adc_channel++;
 
-	if (adc_channel >= 4)
+	if (adc_channel >= 6)
 	{
 		adc_channel = 0;
 	}
 
 	ADMUX = (ADMUX & 0xF0) |
-	(adc_channel & 0x0F);
+	        (adc_channel & 0x0F);
 
 	ADCSRA |= (1 << ADSC);
 }

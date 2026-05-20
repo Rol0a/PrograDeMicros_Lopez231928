@@ -12,13 +12,13 @@ void UART_init(void)
 	UCSR0A = 0;
 
 	UCSR0B = (1 << RXCIE0) |
-	(1 << RXEN0) |
-	(1 << TXEN0);
+	         (1 << RXEN0) |
+	         (1 << TXEN0);
 
 	UCSR0C = (1 << UCSZ01) |
-	(1 << UCSZ00);
+	         (1 << UCSZ00);
 
-	UBRR0 = 5;
+	UBRR0 = 103;
 }
 
 void UART_sendChar(char character)

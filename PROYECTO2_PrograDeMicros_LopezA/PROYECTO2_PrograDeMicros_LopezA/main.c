@@ -3,15 +3,18 @@
  *
  * Created: 4/5/2026 23:44:18
  * Author : Rodrigo López
- * Descripción: 
+ * Descripción:
  */
-/****************************************/
-// Encabezado (Libraries)
-#define F_CPU 16000000UL
+
+// LIBRARIES
+
+#define F_CPU 2000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "ADC/ADC.h"
 #include "PWM_8bits/PWM_8bits.h"
@@ -20,497 +23,705 @@
 #include "EEPROM/EEPROM.h"
 
 /****************************************/
-// Variables Globales
+// EEPROM ADDRESSES
 
-volatile uint16_t adc_values[6] = {0};
+#define EEPROM_MOTOR0_ADDR      0x00
+#define EEPROM_MOTOR1_ADDR      0x01
 
-volatile uint8_t servo0_pos = 127;
-volatile uint8_t servo1_pos = 127;
-volatile uint8_t servo2_pos = 127;
-volatile uint8_t servo3_pos = 127;
-volatile uint8_t servo4_pos = 127;
-volatile uint8_t servo5_pos = 127;
+#define EEPROM_MOTOR2_LOW       0x02
+#define EEPROM_MOTOR2_HIGH      0x03
 
-typedef enum
-{
-	MODO_MANUAL,
-	MODO_UART,
-	MODO_EEPROM
-
-} modo_t;
-
-volatile modo_t current_mode = MODO_MANUAL;
-
-char uart_buffer[10];
-volatile char uart_data = 0;
-volatile uint8_t uart_flag = 0;
-uint8_t uart_index = 0;
+#define EEPROM_MOTOR3_LOW       0x04
+#define EEPROM_MOTOR3_HIGH      0x05
 
 /****************************************/
-// Function prototypes
+// MODES
+
+#define MODE_MANUAL     0
+#define MODE_UART       1
+#define MODE_EEPROM     2
+
+/****************************************/
+// GLOBAL VARIABLES
+
+volatile uint8_t current_mode = MODE_MANUAL;
+
+/****************************************/
+// PWM VARIABLES
+
+volatile uint8_t pwm_motor0 = 0;
+volatile uint8_t pwm_motor1 = 0;
+
+volatile uint16_t pwm_motor2 = 0;
+volatile uint16_t pwm_motor3 = 0;
+
+/****************************************/
+// UART VARIABLES
+
+char uart_buffer[16];
+
+volatile uint8_t uart_index = 0;
+
+/****************************************/
+// FUNCTION PROTOTYPES
 
 void setup(void);
 
-void manual_mode(void);
-void uart_mode(void);
-void eeprom_mode(void);
+/* MODES */
+void mode_manual(void);
+void mode_uart(void);
+void mode_eeprom(void);
 
-void POSICION0(void);
-void POSICION1(void);
-void POSICION2(void);
-void POSICION3(void);
-
-void setServo(uint8_t servo, uint8_t value);
-
+/* UART */
+void check_uart(void);
 void process_uart_command(void);
 
-void save_pose(uint8_t pose);
-void load_pose(uint8_t pose);
+/* MODE LEDS */
+void update_mode_leds(void);
 
-void EEPROM_menu(void);
+/* EEPROM */
+void save_current_positions(void);
+void load_saved_positions(void);
+
+/* SERVO */
+void set_servo(uint8_t servo,
+               uint8_t angle);
+
+uint8_t map_servo_8bit(uint8_t angle);
+
+uint16_t map_servo_16bit(uint8_t angle);
+
+/* TELEMETRY */
+void send_servo_positions(void);
+
+uint8_t pwm_to_angle_8bit(uint8_t pwm);
+
+uint8_t pwm_to_angle_16bit(uint16_t pwm);
 
 /****************************************/
-// Main Function
+// MAIN FUNCTION
 
 int main(void)
 {
-	cli();
+    cli();
 
-	setup();
+    setup();
 
-	sei();
+    ADC_init();
 
-	UART_sendString("LISTO\r\n");
+    PWM_8bits_init();
 
-	while (1)
-	{
-		if (uart_flag)
-		{
-			if (uart_data == 'U')
-			{
-				uart_flag = 0;
-				uart_index = 0;
+    PWM_16bits_init();
 
-				current_mode = MODO_UART;
+    UART_init();
 
-				UART_sendString("\r\nModo UART\r\n");
-			}
+    sei();
 
-			else if (uart_data == 'M')
-			{
-				uart_flag = 0;
-				uart_index = 0;
+    while (1)
+    {
+        /****************************************/
+        // ALWAYS CHECK UART
 
-				current_mode = MODO_MANUAL;
+        check_uart();
 
-				UART_sendString("\r\nModo Manual\r\n");
-			}
+        /****************************************/
+        // UPDATE LEDs
 
-			else if (uart_data == 'E')
-			{
-				uart_flag = 0;
-				uart_index = 0;
+        update_mode_leds();
 
-				current_mode = MODO_EEPROM;
+        /****************************************/
+        // MODE STATE MACHINE
 
-				EEPROM_menu();
-			}
+        switch (current_mode)
+        {
+            case MODE_MANUAL:
 
-			else if (current_mode != MODO_UART &&
-			current_mode != MODO_EEPROM)
-			{
-				uart_flag = 0;
-			}
-		}
+                mode_manual();
 
-		switch (current_mode)
-		{
-			case MODO_MANUAL:
-			manual_mode();
-			break;
+                break;
 
-			case MODO_UART:
-			uart_mode();
-			break;
+            case MODE_UART:
 
-			case MODO_EEPROM:
-			eeprom_mode();
-			break;
-		}
-	}
+                mode_uart();
+
+                break;
+
+            case MODE_EEPROM:
+
+                mode_eeprom();
+
+                break;
+
+            default:
+
+                current_mode = MODE_MANUAL;
+
+                break;
+        }
+    }
 }
 
 /****************************************/
-// NON-Interrupt subroutines
+// SETUP
 
 void setup(void)
 {
-	CLKPR = (1 << CLKPCE);
-	CLKPR = (1 << CLKPS1) | (1 << CLKPS0);
+    /****************************************/
+    // CLOCK = 2 MHz
 
-	ADC_init();
+    CLKPR = (1 << CLKPCE);
 
-	PWM_8bits_init();
+    CLKPR = (1 << CLKPS1);
 
-	PWM_16bits_init();
+    /****************************************/
+    // MODE LEDs
 
-	UART_init();
-}
+    DDRD |= (1 << DDD4) |
+             (1 << DDD5) |
+             (1 << DDD6);
 
-void manual_mode(void)
-{
-	uint8_t pwm8 = 0;
-	uint16_t pwm16 = 0;
-
-	pwm8 = 8 + ((uint32_t)adc_values[0] * 27) / 1023;
-	PWM8_setDuty0(pwm8);
-
-	pwm8 = 8 + ((uint32_t)adc_values[1] * 27) / 1023;
-	PWM8_setDuty1(pwm8);
-
-	pwm16 = 1000 + ((uint32_t)adc_values[2] * 3500) / 1023;
-	PWM16_setDutyA(pwm16);
-
-	pwm16 = 1000 + ((uint32_t)adc_values[3] * 3500) / 1023;
-	PWM16_setDutyB(pwm16);
-
-	pwm8 = 8 + ((uint32_t)adc_values[4] * 27) / 1023;
-	PWM8_setDuty2(pwm8);
-
-	pwm8 = 8 + ((uint32_t)adc_values[5] * 27) / 1023;
-	PWM8_setDuty3(pwm8);
-
-	servo0_pos = adc_values[0] / 4;
-	servo1_pos = adc_values[1] / 4;
-	servo2_pos = adc_values[2] / 4;
-	servo3_pos = adc_values[3] / 4;
-	servo4_pos = adc_values[4] / 4;
-	servo5_pos = adc_values[5] / 4;
-}
-
-void uart_mode(void)
-{
-	if (uart_flag)
-	{
-		uart_flag = 0;
-
-		if (uart_data == '\r' || uart_data == '\n')
-		{
-			if (uart_index > 0)
-			{
-				uart_buffer[uart_index] = '\0';
-
-				process_uart_command();
-
-				uart_index = 0;
-			}
-		}
-
-		else
-		{
-			if (uart_index < 9)
-			{
-				uart_buffer[uart_index] = uart_data;
-				uart_index++;
-			}
-
-			else
-			{
-				uart_index = 0;
-
-				UART_sendString("Buffer lleno\r\n");
-			}
-		}
-	}
-}
-
-void process_uart_command(void)
-{
-	uint8_t servo = 0;
-	uint16_t value = 0;
-	uint8_t i = 0;
-
-	if (uart_buffer[0] == 'N')
-	{
-		POSICION0();
-
-		UART_sendString("POSICION0a\r\n");
-
-		return;
-	}
-
-	if (uart_buffer[0] == 'I')
-	{
-		POSICION1();
-
-		UART_sendString("POSICION1\r\n");
-
-		return;
-	}
-
-	if (uart_buffer[0] == 'D')
-	{
-		POSICION2();
-
-		UART_sendString("POSICION2\r\n");
-
-		return;
-	}
-
-	if (uart_buffer[0] == 'R')
-	{
-		POSICION3();
-
-		UART_sendString("POSICION3\r\n");
-
-		return;
-	}
-
-	if (uart_buffer[0] != 'S')
-	{
-		UART_sendString("Comando invalido\r\n");
-
-		return;
-	}
-
-	if (uart_buffer[1] < '0' || uart_buffer[1] > '5')
-	{
-		UART_sendString("Servo invalido\r\n");
-
-		return;
-	}
-
-	if (uart_buffer[2] != ':')
-	{
-		UART_sendString("Formato invalido\r\n");
-
-		return;
-	}
-
-	servo = uart_buffer[1] - '0';
-
-	i = 3;
-
-	while (uart_buffer[i] >= '0' &&
-	uart_buffer[i] <= '9')
-	{
-		value = (value * 10) +
-		(uart_buffer[i] - '0');
-
-		i++;
-	}
-
-	if (value > 255)
-	{
-		value = 255;
-	}
-
-	setServo(servo, value);
-
-	UART_sendString("Movimiento realizado\r\n");
-}
-
-void eeprom_mode(void)
-{
-	if (uart_flag)
-	{
-		uart_flag = 0;
-
-		if (uart_data == '\r' || uart_data == '\n')
-		{
-			if (uart_index > 0)
-			{
-				uart_buffer[uart_index] = '\0';
-
-				if (uart_buffer[0] == 'G')
-				{
-					save_pose(uart_buffer[1] - '0');
-				}
-
-				else if (uart_buffer[0] == 'L')
-				{
-					load_pose(uart_buffer[1] - '0');
-				}
-
-				else
-				{
-					UART_sendString("Comando invalido\r\n");
-				}
-
-				uart_index = 0;
-			}
-		}
-
-		else
-		{
-			if (uart_index < 9)
-			{
-				uart_buffer[uart_index] = uart_data;
-
-				uart_index++;
-			}
-		}
-	}
-}
-
-void POSICION0(void)
-{
-	setServo(0, 255);
-	setServo(1, 0);
-	setServo(2, 160);
-	setServo(3, 120);
-	setServo(4, 0);
-	setServo(5, 160);
-}
-
-void POSICION1(void)
-{
-	setServo(0, 0);
-	setServo(1, 0);
-	setServo(2, 100);
-	setServo(3, 100);
-	setServo(4, 90);
-	setServo(5, 160);
-}
-
-void POSICION2(void)
-{
-	setServo(0, 255);
-	setServo(1, 255);
-	setServo(2, 200);
-	setServo(3, 120);
-	setServo(4, 20);
-	setServo(5, 100);
-}
-
-void POSICION3(void)
-{
-	setServo(0, 180);
-	setServo(1, 100);
-	setServo(2, 160);
-	setServo(3, 120);
-	setServo(4, 100);
-	setServo(5, 40);
-}
-
-void setServo(uint8_t servo, uint8_t value)
-{
-	uint8_t pwm8 = 0;
-	uint16_t pwm16 = 0;
-
-	switch (servo)
-	{
-		case 0:
-
-		pwm8 = 8 + ((uint32_t)value * 27) / 255;
-
-		PWM8_setDuty0(pwm8);
-
-		servo0_pos = value;
-
-		break;
-
-		case 1:
-
-		pwm8 = 8 + ((uint32_t)value * 27) / 255;
-
-		PWM8_setDuty1(pwm8);
-
-		servo1_pos = value;
-
-		break;
-
-		case 2:
-
-		pwm16 = 1000 + ((uint32_t)value * 3500) / 255;
-
-		PWM16_setDutyA(pwm16);
-
-		servo2_pos = value;
-
-		break;
-
-		case 3:
-
-		pwm16 = 1000 + ((uint32_t)value * 3500) / 255;
-
-		PWM16_setDutyB(pwm16);
-
-		servo3_pos = value;
-
-		break;
-
-		case 4:
-
-		pwm8 = 8 + ((uint32_t)value * 27) / 255;
-
-		PWM8_setDuty2(pwm8);
-
-		servo4_pos = value;
-
-		break;
-
-		case 5:
-
-		pwm8 = 8 + ((uint32_t)value * 27) / 255;
-
-		PWM8_setDuty3(pwm8);
-
-		servo5_pos = value;
-
-		break;
-	}
-}
-
-void save_pose(uint8_t pose)
-{
-	uint16_t address = pose * 6;
-
-	EEPROM_write(address + 0, servo0_pos);
-	EEPROM_write(address + 1, servo1_pos);
-	EEPROM_write(address + 2, servo2_pos);
-	EEPROM_write(address + 3, servo3_pos);
-	EEPROM_write(address + 4, servo4_pos);
-	EEPROM_write(address + 5, servo5_pos);
-
-	UART_sendString("Posicion guardada\r\n");
-}
-
-void load_pose(uint8_t pose)
-{
-	uint16_t address = pose * 6;
-
-	setServo(0, EEPROM_read(address + 0));
-	setServo(1, EEPROM_read(address + 1));
-	setServo(2, EEPROM_read(address + 2));
-	setServo(3, EEPROM_read(address + 3));
-	setServo(4, EEPROM_read(address + 4));
-	setServo(5, EEPROM_read(address + 5));
-
-	UART_sendString("Posicion cargada\r\n");
-}
-
-void EEPROM_menu(void)
-{
-	UART_sendString("\r\nModo EEPROM\r\n");
-
-	UART_sendString("G0 Guardar pose 0\r\n");
-	UART_sendString("G1 Guardar pose 1\r\n");
-	UART_sendString("G2 Guardar pose 2\r\n");
-	UART_sendString("G3 Guardar pose 3\r\n");
-
-	UART_sendString("L0 Leer pose 0\r\n");
-	UART_sendString("L1 Leer pose 1\r\n");
-	UART_sendString("L2 Leer pose 2\r\n");
-	UART_sendString("L3 Leer pose 3\r\n");
+    PORTD &= ~((1 << PORTD4) |
+               (1 << PORTD5) |
+               (1 << PORTD6));
 }
 
 /****************************************/
-// Interrupt routines
+// MODE 0
+// MANUAL CONTROL
 
-ISR(USART_RX_vect)
+void mode_manual(void)
 {
-	uart_data = UDR0;
+    /****************************************/
+    // MOTOR 0 -> OCR2A
 
-	uart_flag = 1;
+    pwm_motor0 =
+        31 +
+        ((uint32_t)adc_values[0] * 125) / 1023;
+
+    PWM8_setDuty2(pwm_motor0);
+
+    /****************************************/
+    // MOTOR 1 -> OCR2B
+
+    pwm_motor1 =
+        31 +
+        ((uint32_t)adc_values[1] * 125) / 1023;
+
+    PWM8_setDuty3(pwm_motor1);
+
+    /****************************************/
+    // MOTOR 2 -> OCR1A
+
+    pwm_motor2 =
+        125 +
+        ((uint32_t)adc_values[2] * 500) / 1023;
+
+    PWM16_setDutyA(pwm_motor2);
+
+    /****************************************/
+    // MOTOR 3 -> OCR1B
+
+    pwm_motor3 =
+        125 +
+        ((uint32_t)adc_values[3] * 500) / 1023;
+
+    PWM16_setDutyB(pwm_motor3);
+}
+
+/****************************************/
+// MODE 1
+// UART CONTROL
+
+void mode_uart(void)
+{
+    /*
+     * UART controls PWM
+     */
+}
+
+/****************************************/
+// MODE 2
+// EEPROM PLAYBACK
+
+void mode_eeprom(void)
+{
+    static uint8_t loaded = 0;
+
+    if (!loaded)
+    {
+        load_saved_positions();
+
+        send_servo_positions();
+
+        loaded = 1;
+    }
+
+    if (current_mode != MODE_EEPROM)
+    {
+        loaded = 0;
+    }
+}
+
+/****************************************/
+// UART RECEIVER
+
+void check_uart(void)
+{
+    if (uart_flag)
+    {
+        uart_flag = 0;
+
+        /****************************************/
+        // END OF COMMAND
+
+        if (uart_data == '\r' ||
+            uart_data == '\n')
+        {
+            if (uart_index > 0)
+            {
+                uart_buffer[uart_index] = '\0';
+
+                process_uart_command();
+
+                uart_index = 0;
+
+                /****************************************/
+                // CLEAR BUFFER
+
+                for (uint8_t j = 0;
+                     j < 16;
+                     j++)
+                {
+                    uart_buffer[j] = '\0';
+                }
+            }
+        }
+
+        /****************************************/
+        // BUFFER RECEPTION
+
+        else
+        {
+            if (uart_index < 15)
+            {
+                uart_buffer[uart_index] =
+                    uart_data;
+
+                uart_index++;
+            }
+
+            else
+            {
+                uart_index = 0;
+
+                UART_sendString(
+                    "Buffer lleno\r\n"
+                );
+            }
+        }
+    }
+}
+
+/****************************************/
+// UART COMMAND PROCESSOR
+
+void process_uart_command(void)
+{
+    uint8_t servo = 0;
+
+    uint16_t angle = 0;
+
+    uint8_t i = 0;
+
+    /****************************************/
+    // MODE CHANGE
+
+    if (strcmp(uart_buffer, "M") == 0)
+    {
+        current_mode++;
+
+        if (current_mode > 2)
+        {
+            current_mode = 0;
+        }
+
+        UART_sendString(
+            "Modo cambiado\r\n"
+        );
+
+        send_servo_positions();
+
+        return;
+    }
+
+    /****************************************/
+    // EEPROM SAVE
+
+    if (strcmp(uart_buffer, "S") == 0)
+    {
+        if (current_mode == MODE_MANUAL)
+        {
+            save_current_positions();
+
+            UART_sendString(
+                "EEPROM guardada\r\n"
+            );
+        }
+
+        return;
+    }
+
+    /****************************************/
+    // UART MODE REQUIRED
+
+    if (current_mode != MODE_UART)
+    {
+        UART_sendString(
+            "No UART mode\r\n"
+        );
+
+        return;
+    }
+
+    /****************************************/
+    // COMMAND FORMAT
+    // S0:120
+
+    if (uart_buffer[0] != 'S')
+    {
+        UART_sendString(
+            "Comando invalido\r\n"
+        );
+
+        return;
+    }
+
+    /****************************************/
+    // SERVO VALIDATION
+
+    if (uart_buffer[1] < '0' ||
+        uart_buffer[1] > '3')
+    {
+        UART_sendString(
+            "Servo invalido\r\n"
+        );
+
+        return;
+    }
+
+    /****************************************/
+    // FORMAT VALIDATION
+
+    if (uart_buffer[2] != ':')
+    {
+        UART_sendString(
+            "Formato invalido\r\n"
+        );
+
+        return;
+    }
+
+    /****************************************/
+    // SERVO NUMBER
+
+    servo =
+        uart_buffer[1] - '0';
+
+    /****************************************/
+    // ANGLE PARSER
+
+    i = 3;
+
+    while (uart_buffer[i] >= '0' &&
+           uart_buffer[i] <= '9')
+    {
+        angle =
+            (angle * 10) +
+            (uart_buffer[i] - '0');
+
+        i++;
+    }
+
+    /****************************************/
+    // LIMIT ANGLE
+
+    if (angle > 180)
+    {
+        angle = 180;
+    }
+
+    /****************************************/
+    // APPLY SERVO
+
+    set_servo(servo, angle);
+
+    UART_sendString(
+        "Servo actualizado\r\n"
+    );
+
+    send_servo_positions();
+}
+
+/****************************************/
+// SERVO SETTER
+
+void set_servo(uint8_t servo,
+               uint8_t angle)
+{
+    switch (servo)
+    {
+        /****************************************/
+        // OCR2A
+
+        case 0:
+
+            PWM8_setDuty2(
+                map_servo_8bit(angle)
+            );
+
+            break;
+
+        /****************************************/
+        // OCR2B
+
+        case 1:
+
+            PWM8_setDuty3(
+                map_servo_8bit(angle)
+            );
+
+            break;
+
+        /****************************************/
+        // OCR1A
+
+        case 2:
+
+            PWM16_setDutyA(
+                map_servo_16bit(angle)
+            );
+
+            break;
+
+        /****************************************/
+        // OCR1B
+
+        case 3:
+
+            PWM16_setDutyB(
+                map_servo_16bit(angle)
+            );
+
+            break;
+    }
+}
+
+/****************************************/
+// MAP 8-BIT PWM
+
+uint8_t map_servo_8bit(uint8_t angle)
+{
+    return 31 +
+           ((uint32_t)angle * 125) / 180;
+}
+
+/****************************************/
+// MAP 16-BIT PWM
+
+uint16_t map_servo_16bit(uint8_t angle)
+{
+    return 125 +
+           ((uint32_t)angle * 500) / 180;
+}
+
+/****************************************/
+// EEPROM SAVE
+
+void save_current_positions(void)
+{
+    EEPROM_write(
+        EEPROM_MOTOR0_ADDR,
+        OCR2A
+    );
+
+    EEPROM_write(
+        EEPROM_MOTOR1_ADDR,
+        OCR2B
+    );
+
+    EEPROM_write(
+        EEPROM_MOTOR2_LOW,
+        OCR1A & 0xFF
+    );
+
+    EEPROM_write(
+        EEPROM_MOTOR2_HIGH,
+        (OCR1A >> 8) & 0xFF
+    );
+
+    EEPROM_write(
+        EEPROM_MOTOR3_LOW,
+        OCR1B & 0xFF
+    );
+
+    EEPROM_write(
+        EEPROM_MOTOR3_HIGH,
+        (OCR1B >> 8) & 0xFF
+    );
+}
+
+/****************************************/
+// EEPROM LOAD
+
+void load_saved_positions(void)
+{
+    uint16_t temp_motor2 = 0;
+
+    uint16_t temp_motor3 = 0;
+
+    PWM8_setDuty2(
+        EEPROM_read(
+            EEPROM_MOTOR0_ADDR
+        )
+    );
+
+    PWM8_setDuty3(
+        EEPROM_read(
+            EEPROM_MOTOR1_ADDR
+        )
+    );
+
+    temp_motor2 =
+        EEPROM_read(
+            EEPROM_MOTOR2_LOW
+        );
+
+    temp_motor2 |=
+        ((uint16_t)
+        EEPROM_read(
+            EEPROM_MOTOR2_HIGH
+        )) << 8;
+
+    PWM16_setDutyA(temp_motor2);
+
+    temp_motor3 =
+        EEPROM_read(
+            EEPROM_MOTOR3_LOW
+        );
+
+    temp_motor3 |=
+        ((uint16_t)
+        EEPROM_read(
+            EEPROM_MOTOR3_HIGH
+        )) << 8;
+
+    PWM16_setDutyB(temp_motor3);
+}
+
+/****************************************/
+// PWM TO ANGLE
+
+uint8_t pwm_to_angle_8bit(uint8_t pwm)
+{
+    if (pwm < 31)
+    {
+        pwm = 31;
+    }
+
+    return
+        ((uint32_t)(pwm - 31) * 180)
+        / 125;
+}
+
+/****************************************/
+
+uint8_t pwm_to_angle_16bit(uint16_t pwm)
+{
+    if (pwm < 125)
+    {
+        pwm = 125;
+    }
+
+    return
+        ((uint32_t)(pwm - 125) * 180)
+        / 500;
+}
+
+/****************************************/
+// TELEMETRY
+
+void send_servo_positions(void)
+{
+    char buffer[32];
+
+    sprintf(
+        buffer,
+        "P0:%u\r\n",
+        pwm_to_angle_8bit(OCR2A)
+    );
+
+    UART_sendString(buffer);
+
+    sprintf(
+        buffer,
+        "P1:%u\r\n",
+        pwm_to_angle_8bit(OCR2B)
+    );
+
+    UART_sendString(buffer);
+
+    sprintf(
+        buffer,
+        "P2:%u\r\n",
+        pwm_to_angle_16bit(OCR1A)
+    );
+
+    UART_sendString(buffer);
+
+    sprintf(
+        buffer,
+        "P3:%u\r\n",
+        pwm_to_angle_16bit(OCR1B)
+    );
+
+    UART_sendString(buffer);
+
+    sprintf(
+        buffer,
+        "MODE:%u\r\n",
+        current_mode
+    );
+
+    UART_sendString(buffer);
+}
+
+/****************************************/
+// MODE LEDs
+
+void update_mode_leds(void)
+{
+    PORTD &= ~((1 << PORTD4) |
+               (1 << PORTD5) |
+               (1 << PORTD6));
+
+    switch (current_mode)
+    {
+        case MODE_MANUAL:
+
+            PORTD |= (1 << PORTD4);
+
+            break;
+
+        case MODE_UART:
+
+            PORTD |= (1 << PORTD5);
+
+            break;
+
+        case MODE_EEPROM:
+
+            PORTD |= (1 << PORTD6);
+
+            break;
+    }
 }
